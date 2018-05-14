@@ -1,0 +1,47 @@
+package com.yaDsp.strategy.impl;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.model.standard.request.BidRequest;
+import com.yaDsp.strategy.FilterStrategy;
+
+ 
+
+ 
+public class BlacklistControlStrategy   implements FilterStrategy {
+
+	@Override
+	public List<Ad> execute(BidRequest request, List<Ad> ads) {
+		if(ads != null && !ads.isEmpty()){
+			List<Ad> result = ads.stream()
+					.filter(ad-> ad.account.getBlackUrlList() == null || 
+							ad.account.getBlackUrlList().isEmpty() ||
+							ad.account.getBlackUrlList().stream().reduce("",(x,y)-> x+","+y ).indexOf(","+request.getSite().getUrl()) < 0
+							)
+					.collect(Collectors.toList());
+			
+			if(!result.isEmpty())
+			{
+				result = result.stream()
+						.filter(ad-> ad.account.getBlackIdList() == null || 
+								ad.account.getBlackIdList().isEmpty() ||
+								ad.account.getBlackIdList().stream().reduce("",(x,y)-> x+","+y ).indexOf(","+request.getUser().getUserId()) < 0
+								)
+						.collect(Collectors.toList());
+			}
+			return result;
+		}
+		return ads;
+	}
+
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return "Blacklist";
+	}
+	 
+	 
+
+}

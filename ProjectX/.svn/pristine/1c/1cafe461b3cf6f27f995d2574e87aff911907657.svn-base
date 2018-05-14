@@ -1,0 +1,27 @@
+package com.yaDsp.strategy.impl;
+
+import java.util.List;
+
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.model.standard.request.BidRequest;
+import com.yaDsp.strategy.PriorityStrategy;
+
+ 
+ 
+public class WhitelistStrategry   implements PriorityStrategy {
+
+	@Override
+	public List<Ad> execute(BidRequest request, List<Ad> ads) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return "Whitelist";
+	}
+
+	
+
+}

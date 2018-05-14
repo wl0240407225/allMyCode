@@ -1,0 +1,150 @@
+package com.yaDsp.engine.selector;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.function.Predicate;
+
+import com.yaDsp.model.standard.request.BidRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.material.*;
+import com.yaDsp.material.model.*;
+import com.yaDsp.util.ListUtil;
+ 
+
+public class CampaignFilter {
+
+	private static Logger logger = LoggerFactory.getLogger(CampaignFilter.class);
+	
+	//private static boolean isDebugEnabled =  false;
+	
+	public static List<Integer> iterateFilter(BidRequest request, List<Integer> accountIds) {
+		List<Integer> result = new ArrayList<Integer>();
+
+		if (accountIds.size() == 0) {
+			return result;
+		}
+
+		CampaignServiceImpl campaignService = new CampaignServiceImpl();
+
+		// 根据accountIds，获取对应的campaignIdList
+		List<Integer> campaignIds =getFilteredCampaignIds(campaignService, accountIds,request.isDebug());
+
+		if(request.isDebug())
+		{
+			logger.debug("筛选前 campaignId:" + ListUtil.intListToString(campaignIds));
+		}
+		
+		HashMap<Integer, Campaign> campaignTable = campaignService.getCampaign(campaignIds);
+
+		campaignTable.forEach((campaignId, campaign) -> {
+				if (judgeStartEndDate(campaign,request.isDebug())
+						&& judgeExcludeCycle(campaign,request.isDebug())) {
+					result.add(campaign.getCampaign_id());
+				}
+		});
+
+		if(request.isDebug())
+		{
+			logger.debug("筛选后 campaignId:" + ListUtil.intListToString(result));
+		}
+		
+		return result;
+	}
+
+	/**
+	 * 根据accountids，获取对应的campaignIdList
+	 * 
+	 * @param campaignService
+	 * @param accountIds
+	 * @return
+	 */
+	private static List<Integer> getFilteredCampaignIds(CampaignServiceImpl campaignService, List<Integer> accountIds,boolean isDebug) {
+		List<Integer> result = new ArrayList<Integer>();
+
+		HashMap<Integer, List<Integer>> mappingIdTable = campaignService.getMappingIdTable();
+
+		mappingIdTable.forEach((accountId, campaignIds) -> {
+			if (accountIds.contains(accountId)) {
+				result.addAll(campaignIds);
+				
+				if(isDebug)
+				{
+					logger.debug(String.format("accountId(campaignId): %d(%s)", accountId, ListUtil.intListToString(campaignIds)));
+				}
+			}
+		});
+
+		return result;
+	}
+	
+	/**
+	 * 判断当前时间是否不在排除投放周期?
+	 * 在排除投放周期内，返回false
+	 * 不在排除投放周期内，返回true
+	 * @param campaign
+	 * @return 
+	 */
+	private static boolean judgeExcludeCycle(Campaign campaign,boolean isDebug) {
+		boolean result = false;
+
+		Date now = new Date();
+		ExcludeCycle excludeCycle = campaign.getExcludeCycle();
+
+		if ("all".equals(excludeCycle.getSet_type())) {
+			result = true;
+		} else {
+			Predicate<Cycle> condition = c -> (now.compareTo(c.getStartDate()) >= 0)
+					&& (now.compareTo(c.getEndDate()) <= 0);
+			result = !excludeCycle.getCycle().stream().anyMatch(condition);
+		}
+
+		if (!result && isDebug) {
+			List<String> excludeCycleDates = new ArrayList<String>();
+			
+			excludeCycle.getCycle().stream().forEach(e -> 
+			excludeCycleDates.add(e.getStartDate().toString()+ "-" + e.getEndDate().toString()));
+			
+			logger.debug(String.format("排除投放周期 campaignId:%d\tDB.ExcludeCycle:%s", 
+					campaign.getCampaign_id(),
+					ListUtil.strListToString(excludeCycleDates)));
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 判断开始日期，结束日期
+	 * @param campaign
+	 * @return
+	 */
+	private static boolean judgeStartEndDate(Campaign campaign,boolean isDebug) {
+		boolean result = false;
+
+		Date now = new Date();
+		
+		Date start = campaign.getStart_date();
+		Date end = campaign.getEnd_date();
+		
+		if(end == null)
+		{
+			result = now.compareTo(start) >= 0;
+		}
+		else
+		{
+			result = now.compareTo(start) >= 0 && now.compareTo(end) <= 0;
+		}
+		
+		if (!result && isDebug && start != null && end != null) {
+			logger.debug(String.format("开始日期，结束日期 campaignId:%d\tDB.start:%s\tDB.end:%s",
+					campaign.getCampaign_id(),
+					start.toString(),
+					end.toString()));
+		}
+		
+		return result;
+	}
+}

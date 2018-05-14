@@ -1,0 +1,111 @@
+package com.yaDsp.util;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.util.ConfigManager;
+
+public class Database {
+
+	private static Logger logger = LoggerFactory.getLogger(Database.class);
+
+	private static String url;
+
+	private static String userName;
+
+	private static String password;
+
+	private static String driver;
+
+	private static Database dataBase = null;
+
+	private static final ThreadLocal<Connection> threadLocal = new ThreadLocal<Connection>();
+
+	static {
+		try {		 
+			url = ConfigManager.Get("db.url");
+			driver = ConfigManager.Get("db.driver");
+			userName = ConfigManager.Get("db.username");
+			password = ConfigManager.Get("db.password");
+			Class.forName(driver);
+			logger.info("Openning "+url);
+		} catch (ClassNotFoundException e) {
+			logger.error("数据库驱动加载失败", e);
+		}
+	}
+
+	private Database() {
+
+	}
+
+	public static Database getInstance() {
+		synchronized (Database.class) {
+			if (dataBase == null) {
+				dataBase = new Database();
+			}
+		}
+		return dataBase;
+	}
+
+ 
+	public Connection getConnection() {
+		Connection connection = null;
+		try {
+			connection = threadLocal.get();
+			if (connection == null) {
+				connection = DriverManager.getConnection(url, userName, password);
+				threadLocal.set(connection);
+			}
+		} catch (SQLException e) {
+			logger.error("获取数据库连接异常", e);
+		}
+		return connection;
+	}
+	
+ 
+	public void closeConnection() {
+		Connection connection = getConnection();
+		if (connection != null) {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				logger.error("关闭连接异常", e);
+			}finally
+			{
+				threadLocal.remove();
+			}
+		}
+	}
+
+ 
+	public static void colsePstmt(PreparedStatement pstmt) {
+		if (pstmt != null) {
+			try {
+				pstmt.close();
+			} catch (SQLException e) {
+				logger.error("关闭预处理异常", e);
+			}
+		}
+	}
+
+	 
+	public static void colseResult(ResultSet rs) {
+		if (rs != null) {
+			try {
+				rs.close();
+			} catch (SQLException e) {
+				logger.error("关闭结果集异常", e);
+			}
+		}
+	}
+	
+	
+	
+	
+}

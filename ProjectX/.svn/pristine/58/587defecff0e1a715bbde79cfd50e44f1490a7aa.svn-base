@@ -1,0 +1,43 @@
+package com.yaDsp.model.standard.request;
+
+public class App {
+	private String id;
+	private String name;
+	private String sspId;  //non iab-conform
+	private String bundleId;
+	private String cat; 
+	
+	//app category
+	public String getCat() {
+		return cat;
+	}
+	public void setCat(String cat) {
+		this.cat = cat;
+	}
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getSspId() {
+		return sspId;
+	}
+	public void setSspId(String sspId) {
+		this.sspId = sspId;
+	}
+	public String getBundleId() {
+		return bundleId;
+	}
+	public void setBundleId(String bundleId) {
+		this.bundleId = bundleId;
+	}
+	
+
+}

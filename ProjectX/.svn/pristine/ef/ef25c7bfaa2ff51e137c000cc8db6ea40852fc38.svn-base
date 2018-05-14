@@ -1,0 +1,13 @@
+package com.yaDsp.model.standard.response;
+
+public class NativeLinkExt {
+    private int link_type;
+
+    public int getLink_type() {
+        return link_type;
+    }
+
+    public void setLink_type(int link_type) {
+        this.link_type = link_type;
+    }
+}

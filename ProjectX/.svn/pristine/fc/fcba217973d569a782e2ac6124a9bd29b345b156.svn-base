@@ -1,0 +1,80 @@
+package com.yaDsp.strategy;
+
+ 
+
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.model.standard.request.BidRequest;
+
+ 
+
+public class StrategyManager {
+	static Random rand=new Random();
+	
+	private static Logger logger = LoggerFactory.getLogger(StrategyManager.class.getSimpleName());
+	
+	static public List<Ad> Execute(BidRequest req, List<Ad> candidates){
+		
+		if(candidates.size()>0)
+		{
+			GroupStrategy pickedStrategy=null;
+			
+			List<GroupStrategy> applicable=groups.stream()
+					.filter(g->g.isApplicable(req))
+					.collect(Collectors.toList());
+			
+			if(applicable.size()==0){
+				//something wrong? should return here.
+				logger.error("No matched GroupStrategy!");
+				
+			}else if(applicable.size()==1){
+				pickedStrategy=applicable.get(0);
+			}else{
+				double val=rand.nextDouble();
+				double total=applicable.stream().collect(Collectors.summarizingDouble(g->g.getExecutionRate())).getSum();
+				double sumRate=0;
+				for(int i=0;i<applicable.size();i++)
+				{
+					sumRate+=applicable.get(i).getExecutionRate();
+					if(sumRate/total>val){
+						pickedStrategy=applicable.get(i);
+						break;
+					}					
+				}
+			}
+			
+			List<Ad> ads =  pickedStrategy.execute(req, candidates);
+			if(ads != null && ads.size() > 0)
+			{
+				for (int i = 0; i < ads.size(); i++) {
+					if(ads.get(i).adgroup.getBid_type() == 2){//cpc, ctr*1000*0.9
+						ads.get(i).strategy_ext_bid_price = (int) (ads.get(i).strategy_ext_ctr * ads.get(i).adgroup.getBid_price().intValue()*900);
+					}else{
+						ads.get(i).strategy_ext_bid_price = ads.get(i).adgroup.getBid_price().intValue();
+					}
+					ads.get(i).strategy_ext_name = pickedStrategy.getName();
+				} 
+			}
+			return ads;
+		}else{
+			//TODO: return Response.empty() is better.
+			return null;
+		}
+		
+		
+	}
+	
+	public static void initWithConfigProvider(StrategyConfigProvider provider)
+	{
+		 groups= provider.getGroupStrategyConfig().stream().map(g->g.buildStrategy())
+				 .collect(Collectors.toList()); 
+	} 
+	
+	static List<GroupStrategy> groups;
+}

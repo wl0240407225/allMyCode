@@ -1,0 +1,98 @@
+package com.yaDsp;
+
+import java.io.File;
+
+import com.yaDsp.handler.ZPlayBid;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+ 
+import com.yaDsp.handler.AdSync;
+import com.yaDsp.handler.StdBid;
+import com.yaDsp.material.AdSyncService;
+import com.yaDsp.strategy.DbStrategyConfigProvider;
+import com.yaDsp.strategy.StrategyManager;
+import com.yaDsp.trc.TrcEventDispatcher;
+import com.yaDsp.trc.TrcHandler;
+import com.yaDsp.trc.listener.AmountControlListener;
+import com.yaDsp.trc.listener.LogTrcListener;
+import com.yaDsp.util.ConfigManager;
+import com.yaDsp.util.IpUtil;
+
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
+
+ 
+
+public class AppMain {
+
+	private static Logger logger;// = LoggerFactory.getLogger(AppMain.class);
+	public static void main(String[] args) throws Exception {
+			PreInit();
+	 	    Start();
+	}
+
+	private static void initLogback() {
+		File logbackFile = new File("logback.xml");
+	        if (logbackFile.exists()) {
+	            LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+	            JoranConfigurator configurator = new JoranConfigurator();
+	            configurator.setContext(lc);
+	            lc.reset();
+	            try {
+	                configurator.doConfigure(logbackFile);
+	            }
+	            catch (JoranException e) {
+	                e.printStackTrace(System.err);
+	                System.exit(-1);
+	            }
+	        }
+	        logger = LoggerFactory.getLogger(AppMain.class);;
+			logger.info("Logback initialized");
+	}
+	
+	static void PreInit() {
+		 initLogback();
+		 com.yaDsp.logger.LogSystem.init();
+		 initTrac();
+		 logger.info("Start to sync materials.");
+		 syncMaterial();
+		 logger.info("Sync materials ends.");
+		 logger.info("Start to load Ip info");
+		 IpUtil.init();
+		 logger.info("Load Ip info ends");
+		 
+		 StrategyManager.initWithConfigProvider(new DbStrategyConfigProvider());
+		 logger.info("StrategyManager init ends");
+	}
+	
+	static void syncMaterial() {
+		AdSyncService.syncAccount(null, true);
+	}
+	
+	static void initTrac() {
+		TrcEventDispatcher.getIntance().RegisterListener(new LogTrcListener());
+		TrcEventDispatcher.getIntance().RegisterListener(new AmountControlListener());
+	}
+	
+	static void Start() throws Exception {
+		  int port = ConfigManager.GetInt("server.port");
+	      Server server = new Server(port);
+	      
+	      ServletHandler servlet=new ServletHandler();
+	 	  //servlet.addServletWithMapping(StdBid.class, "/dsp/stdbid");
+		  servlet.addServletWithMapping(ZPlayBid.class, "/dsp/zplaybid");
+	 	  servlet.addServletWithMapping(AdSync.class, "/dsp/ad");
+	 	  servlet.addServletWithMapping(TrcHandler.class,"/trc");
+	 	  server.setHandler(servlet);
+	 	  
+	 	  server.start();
+	 	  server.join(); 	  	 	   
+	}
+	
+	 
+
+}

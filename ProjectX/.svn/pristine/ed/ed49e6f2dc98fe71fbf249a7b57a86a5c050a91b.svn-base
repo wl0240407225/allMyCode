@@ -1,0 +1,17 @@
+package com.yaDsp.model.zplay.response;
+
+import com.alibaba.fastjson.annotation.JSONField;
+import com.yaDsp.model.standard.response.AdmNative;
+
+public class ZpAdmOneof {
+    private AdmNative admNative;
+
+    @JSONField(name="AdmNative")
+    public AdmNative getAdmNative() {
+        return admNative;
+    }
+
+    public void setAdmNative(AdmNative admNative) {
+        this.admNative = admNative;
+    }
+}

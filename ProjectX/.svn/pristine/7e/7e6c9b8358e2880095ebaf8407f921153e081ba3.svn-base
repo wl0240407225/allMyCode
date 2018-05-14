@@ -1,0 +1,102 @@
+package com.yaDsp.model.zplay.response;
+
+import java.util.List;
+
+public class ZpBidExt {
+    private String app_ver;
+    private String clkurl;
+    private List<String> imptrackers;
+    private List<String> clktrackers;
+    private String html_snippet;
+
+    //广告资源类型, 1:图片，2:图文，3:视频 ，4:html5，5:文本，
+    // 6:原生, 7:html5 url, 即一个指向html5素材页面的url
+    private int inventory_type;
+    private String title;
+    private String desc;
+
+    //广告动作类型， 1: 在app内webview打开目标链接， 2： 在系统浏览器打开目标链 接, 3：打开地图，
+    // 4： 拨打电话，5：播放视频, 6:App下载
+    private int action;
+    private String download_file_name;
+
+    public String getApp_ver() {
+        return app_ver;
+    }
+
+    public void setApp_ver(String app_ver) {
+        this.app_ver = app_ver;
+    }
+
+    public String getClkurl() {
+        return clkurl;
+    }
+
+    public void setClkurl(String clkurl) {
+        this.clkurl = clkurl;
+    }
+
+    public List<String> getImptrackers() {
+        return imptrackers;
+    }
+
+    public void setImptrackers(List<String> imptrackers) {
+        this.imptrackers = imptrackers;
+    }
+
+    public List<String> getClktrackers() {
+        return clktrackers;
+    }
+
+    public void setClktrackers(List<String> clktrackers) {
+        this.clktrackers = clktrackers;
+    }
+
+    public String getHtml_snippet() {
+        return html_snippet;
+    }
+
+    public void setHtml_snippet(String html_snippet) {
+        this.html_snippet = html_snippet;
+    }
+
+    public int getInventory_type() {
+        return inventory_type;
+    }
+
+    public void setInventory_type(int inventory_type) {
+        this.inventory_type = inventory_type;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
+    public int getAction() {
+        return action;
+    }
+
+    public void setAction(int action) {
+        this.action = action;
+    }
+
+    public String getDownload_file_name() {
+        return download_file_name;
+    }
+
+    public void setDownload_file_name(String download_file_name) {
+        this.download_file_name = download_file_name;
+    }
+}

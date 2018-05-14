@@ -1,0 +1,27 @@
+package com.yaDsp.trc;
+ 
+import com.yaDsp.util.*;
+
+public class TrcUtil {
+
+	public static String GetDefaultTrc(TrcModel model) {
+		String host = ConfigManager.Get("track.host");
+		String path = ConfigManager.Get("track.path");
+
+		path = path.replace("__ACT__", model.getAct());
+		path = path.replace("__REQID__", model.getId());
+		path = path.replace("__CREATIVE__", model.getCreativeId());
+		path = path.replace("__ADGROUP__", model.getAdgroupId());
+		path = path.replace("__CAMPAIGN__", model.getCampaignId());
+		path = path.replace("__DEVICE__", model.getDeviceId());
+		path = path.replace("__SSPID__", model.getSspId());
+		path = path.replace("__APPID__", model.getAppId());
+		path = path.replace("__PRICE__", model.getBidPrice());
+		path = path.replace("__SLOT__", model.getSlottoken());
+		path = path.replace("__IP__", model.getIP());
+	    path = path.replace("__IPDX__", model.getRealIP());
+
+		return host + path;
+	}
+
+}

@@ -1,0 +1,33 @@
+package com.yaDsp.model.zplay.response;
+
+import java.util.List;
+
+public class ZpBidResponse {
+    private String id;
+    private List<ZpSeatBid> seatbid;
+    private ZpNoBidReason nbr;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public List<ZpSeatBid> getSeatbid() {
+        return seatbid;
+    }
+
+    public void setSeatbid(List<ZpSeatBid> seatbid) {
+        this.seatbid = seatbid;
+    }
+
+    public ZpNoBidReason getNbr() {
+        return nbr;
+    }
+
+    public void setNbr(ZpNoBidReason nbr) {
+        this.nbr = nbr;
+    }
+}

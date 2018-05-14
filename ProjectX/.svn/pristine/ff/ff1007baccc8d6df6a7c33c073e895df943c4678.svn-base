@@ -1,0 +1,36 @@
+package com.yaDsp.material.model;
+
+import java.util.List;
+
+public class TargetingGeographic {
+
+	String geographic_category;
+	List<BusinessValue> business_value;
+	List<GeographicValue> geographic_value;
+	PoiValue poi_value; 
+	
+	public String getGeographic_category() {
+		return geographic_category;
+	}
+	public void setGeographic_category(String geographic_category) {
+		this.geographic_category = geographic_category;
+	}
+	public List<BusinessValue> getBusiness_value() {
+		return business_value;
+	}
+	public void setBusiness_value(List<BusinessValue> business_value) {
+		this.business_value = business_value;
+	}
+	public List<GeographicValue> getGeographic_value() {
+		return geographic_value;
+	}
+	public void setGeographic_value(List<GeographicValue> geographic_value) {
+		this.geographic_value = geographic_value;
+	}
+	public PoiValue getPoi_value() {
+		return poi_value;
+	}
+	public void setPoi_value(PoiValue poi_value) {
+		this.poi_value = poi_value;
+	}
+}

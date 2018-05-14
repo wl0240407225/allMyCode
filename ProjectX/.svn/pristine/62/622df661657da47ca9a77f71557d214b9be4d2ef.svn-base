@@ -1,0 +1,21 @@
+package com.yaDsp.material.model;
+
+public class FrequencyControl {
+	/**
+	 *
+	 * 0：不限，1：日控量，2：周控量，3：月控量，4：周期总控量
+	 */
+	public int ControlType;
+	
+	
+	/**
+	 * 限量
+	 */
+	public int TotalAmount;
+
+
+	/**
+	 * 频控对象： 1 展示 2 点击
+	 */
+	public int ControlTarget;
+}

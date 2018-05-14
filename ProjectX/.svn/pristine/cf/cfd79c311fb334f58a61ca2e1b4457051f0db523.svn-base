@@ -1,0 +1,18 @@
+package com.yaDsp.model.zplay.request;
+
+public enum ZpConnectionType {
+
+    CONNECTION_UNKNOWN,
+
+    ETHERNET,
+
+    WIFI,
+
+    CELL_UNKNOWN,
+
+    CELL_2G,
+
+    CELL_3G,
+
+    CELL_4G
+}

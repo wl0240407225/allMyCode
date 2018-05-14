@@ -1,0 +1,123 @@
+package com.yaDsp.material;
+import com.yaDsp.material.model.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+ 
+
+public class CreativeUnitServiceImpl  {
+
+	private static HashMap<Integer, CreativeUnit> creativeUnitTable = new HashMap<Integer, CreativeUnit>();
+
+	// adgroupId 和  List<creativeUnitId> 的映射
+    private static HashMap<Integer, List<Integer>> mappingIdTable = new HashMap<Integer, List<Integer>>();
+    
+	private ReentrantReadWriteLock rw1 = new ReentrantReadWriteLock();
+	
+	 
+	public List<Integer> updateCreativeUnit(List<CreativeUnit> creativeUnits) {
+		rw1.writeLock().lock();
+
+		List<Integer> result = new ArrayList<Integer>();
+
+		for (CreativeUnit creativeUnit : creativeUnits) {
+
+			try {
+				creativeUnitTable.put(creativeUnit.getCreative_unit_id(), creativeUnit);
+
+				//更新adgroupId 和  List<creativeUnitId> 的映射
+				List<Integer> creativeUnitIds = mappingIdTable.getOrDefault(creativeUnit.getAdgroup_id(), 
+						new ArrayList<Integer>());
+						
+				if(!creativeUnitIds.contains(creativeUnit.getCreative_unit_id()))
+				{
+					creativeUnitIds.add(creativeUnit.getCreative_unit_id());
+					mappingIdTable.put(creativeUnit.getAdgroup_id(), creativeUnitIds);
+				}
+			} catch (Exception e) {
+				result.add(creativeUnit.getCreative_unit_id());
+			}
+		}
+
+		rw1.writeLock().unlock();
+
+		return result;
+	}
+
+	 
+	public List<Integer> deleteCreativeUnit(List<Integer> creativeUnitIds) {
+		rw1.writeLock().lock();
+
+		List<Integer> result = new ArrayList<Integer>();
+
+		for (Integer creativeUnitId : creativeUnitIds) {
+
+			try {
+				if (creativeUnitTable.containsKey(creativeUnitId)) {
+					
+					//移除mappingIdTable中存在的campaignId
+					CreativeUnit creativeUnit = creativeUnitTable.get(creativeUnitId);
+					
+					List<Integer> creativeUnitIdList = mappingIdTable.getOrDefault(creativeUnit.getAdgroup_id(), 
+							new ArrayList<Integer>());
+					
+					creativeUnitIdList.remove(creativeUnitId);
+					mappingIdTable.put(creativeUnit.getAdgroup_id(), creativeUnitIdList);
+
+					//creativeUnitTable移除creativeUnitId映射的对象
+					creativeUnitTable.remove(creativeUnitId);
+				}
+			} catch (Exception e) {
+				result.add(creativeUnitId);
+			}
+		}
+
+		rw1.writeLock().unlock();
+
+		return result;
+	}
+
+	 
+	public HashMap<Integer, CreativeUnit> getCreativeUnit(
+			List<Integer> creativeUnitIds) {
+		rw1.readLock().lock();
+
+		HashMap<Integer, CreativeUnit> result = new HashMap<Integer, CreativeUnit>();
+
+		for (Integer creativeUnitId : creativeUnitIds) {
+			if (creativeUnitTable.containsKey(creativeUnitId)) {
+				result.put(creativeUnitId, creativeUnitTable.get(creativeUnitId));
+			}
+		}
+
+		rw1.readLock().unlock();
+
+		return result;
+	}
+
+	public CreativeUnit getCreativeUnit(int creativeUnitId) {
+		rw1.readLock().lock();
+
+		CreativeUnit result = new CreativeUnit();
+
+		if (creativeUnitTable.containsKey(creativeUnitId)) {
+			result = creativeUnitTable.get(creativeUnitId);
+		}
+
+		rw1.readLock().unlock();
+
+		return result;
+	}
+	
+ 
+	public HashMap<Integer, CreativeUnit> getAllCreativeUnit() {
+		return creativeUnitTable;
+	}
+
+ 
+	public HashMap<Integer, List<Integer>> getMappingIdTable() {
+		return mappingIdTable;
+	}
+
+}

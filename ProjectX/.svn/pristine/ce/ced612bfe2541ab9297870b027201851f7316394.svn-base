@@ -1,0 +1,160 @@
+package com.yaDsp.model.standard.response;
+
+import com.yaDsp.model.standard.request.NativeInfo;
+
+import java.util.List;
+
+public class Bid {
+	private String impID;
+	private double price;  //CPM cent
+	private String nurl; //winnotice
+	private String lpg;   //ladning page
+	private String imgurl; 
+	private List<String> impTracking;
+	private List<String> clkTracking;
+	private String adm;
+	public String getImpID() {
+		return impID;
+	}
+	public void setImpID(String impID) {
+		this.impID = impID;
+	}
+	public double getPrice() {
+		return price;
+	}
+	public void setPrice(double price) {
+		this.price = price;
+	}
+	public String getNurl() {
+		return nurl;
+	}
+	public void setNurl(String nurl) {
+		this.nurl = nurl;
+	}
+	public String getLpg() {
+		return lpg;
+	}
+	public void setLpg(String lpg) {
+		this.lpg = lpg;
+	}
+	public String getImgurl() {
+		return imgurl;
+	}
+	public void setImgurl(String imgurl) {
+		this.imgurl = imgurl;
+	}
+	public List<String> getImpTracking() {
+		return impTracking;
+	}
+	public void setImpTracking(List<String> impTracking) {
+		this.impTracking = impTracking;
+	}
+	public List<String> getClkTracking() {
+		return clkTracking;
+	}
+	public void setClkTracking(List<String> clkTracking) {
+		this.clkTracking = clkTracking;
+	}
+	public String getAdm() {
+		return adm;
+	}
+	public void setAdm(String adm) {
+		this.adm = adm;
+	}
+	
+	public String getAdmId() {
+		return admId;
+	}
+	public void setAdmId(String admId) {
+		this.admId = admId;
+	}
+	public String getCampaignId() {
+		return campaignId;
+	}
+	public void setCampaignId(String campaignId) {
+		this.campaignId = campaignId;
+	}
+	public String getAdgroupId() {
+		return adgroupId;
+	}
+	public void setAdgroupId(String adgroupId) {
+		this.adgroupId = adgroupId;
+	}
+	public String getCreativeUnitId() {
+		return creativeUnitId;
+	}
+	public void setCreativeUnitId(String creativeUnitId) {
+		this.creativeUnitId = creativeUnitId;
+	}
+	public String getCreativeId() {
+		return creativeId;
+	}
+	public void setCreativeId(String creativeId) {
+		this.creativeId = creativeId;
+	}
+	 
+ 	/**
+	 * 物料id,始终是自家的物料id
+	 */
+	String admId;
+	
+ 
+	/**
+	 * 计划ID
+	 */
+	String campaignId;
+	
+
+
+
+	/**
+	 * 单元ID
+	 */
+	String adgroupId;
+	
+	/**
+	 * 创意组ID
+	 */
+	String creativeUnitId;
+	
+	public String getDealID() {
+		return dealID;
+	}
+	public void setDealID(String dealID) {
+		this.dealID = dealID;
+	}
+
+	/**
+	 * 创意ID,自家的创意id或者是三方的创意id
+	 */
+	String creativeId;
+	
+	String dealID;
+	
+	String accountId;
+	public String getAccountId() {
+		return accountId;
+	}
+	public void setAccountId(String accountId) {
+		this.accountId = accountId;
+	}
+	 
+
+	NativeInfo nativeInfo;
+	public NativeInfo getNativeInfo() {
+		return nativeInfo;
+	}
+	public void setNativeInfo(NativeInfo nativeInfo) {
+		this.nativeInfo = nativeInfo;
+	}
+
+	private AdmNative admNative;
+
+	public AdmNative getAdmNative() {
+		return admNative;
+	}
+
+	public void setAdmNative(AdmNative admNative) {
+		this.admNative = admNative;
+	}
+}

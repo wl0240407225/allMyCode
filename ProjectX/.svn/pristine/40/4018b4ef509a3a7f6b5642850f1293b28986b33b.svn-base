@@ -1,0 +1,787 @@
+package com.yaDsp.engine.selector;
+
+import java.math.BigDecimal;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.function.Predicate;
+
+
+import com.yaDsp.model.standard.request.BidRequest;
+import com.yaDsp.model.standard.request.Geo;
+import com.yaDsp.model.standard.request.Imp;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
+ 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+ 
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+
+import com.yaDsp.util.ListUtil;
+import com.yaDsp.util.RedisUtil;
+import com.yaDsp.material.*;
+import com.yaDsp.material.model.*;
+
+public class AdgroupFilter {
+	
+ 
+	private RedisUtil redisUtilTemp;
+	
+	private static RedisUtil redisUtil;
+	
+ 
+    public void init()
+    {
+		if(redisUtil == null){
+			redisUtil = redisUtilTemp;	
+		}
+    }
+	private static Logger logger = LoggerFactory.getLogger(AdgroupFilter.class);
+	
+//	private static boolean isDebugEnabled = logger.isDebugEnabled();
+	
+	public static List<Integer> iterateFilter(BidRequest request, List<Integer> campaignIds)
+	{
+		List<Integer> result = new ArrayList<Integer>();
+		
+		if (campaignIds.size() == 0) {
+			return result;
+		}
+		
+		boolean isDebug=request.isDebug();
+
+		AdgroupServiceImpl adgroupService = new AdgroupServiceImpl();
+
+		// 根据campaignIds，获取对应的adgroupIdList
+		List<Integer> adgroupIds = getFilteredAdgroupIds(adgroupService, campaignIds,isDebug);
+
+		if(request.isDebug())
+		{
+			logger.debug("筛选前 adgroupId:" + ListUtil.intListToString(adgroupIds));
+		}
+		
+		HashMap<Integer, Adgroup> adgroupTable = adgroupService.getAdgroup(adgroupIds);
+
+		adgroupTable.forEach((adgroupId, adgroup) -> {
+			
+			if (judgeBidPrice(request, adgroup,isDebug)
+					&& judgeWhichUsers(request, adgroup,isDebug)
+					&& judgeMediaTargeting(request, adgroup,isDebug)
+					&& judgeBasicTargeting(request, adgroup,isDebug)
+					&& judgeDeviceType(request, adgroup,isDebug)
+					&& judgeDisplayType(request, adgroup,isDebug)
+					//&& judgeDealid(request, adgroup,isDebug)
+					&& judgeFlowType(request, adgroup,isDebug)
+					&& judgeTargeting(request, adgroup,isDebug)
+					&& judgeWhichTDP(request, adgroup,isDebug))
+			{
+				result.add(adgroup.getAdgroup_id());
+			}
+		});
+
+		if(isDebug)
+		{
+			logger.debug("筛选后 adgroupId:" + ListUtil.intListToString(result));
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 根据campaignIds，获取对应的adgroupIdList
+	 * 
+	 * @param adgroupService
+	 * @param campaignIds
+	 * @return
+	 */
+	private static List<Integer> getFilteredAdgroupIds(AdgroupServiceImpl adgroupService,List<Integer> campaignIds,boolean isDebug)
+	{
+		List<Integer> result = new ArrayList<Integer>();
+
+		HashMap<Integer, List<Integer>> mappingIdTable = adgroupService.getMappingIdTable();
+
+		mappingIdTable.forEach((campaignId, adgroupIds) -> {
+			if (campaignIds.contains(campaignId)) {
+				result.addAll(adgroupIds);
+				
+				if(isDebug)
+				{
+					logger.debug(String.format("campaignId(adgroupId): %d(%s)", campaignId, ListUtil.intListToString(adgroupIds)));
+				}
+			}
+		});
+
+		return result;
+	}
+	
+	/**
+	 * 判断 基础定向
+	 * 
+	 * @param request
+	 * @param adgroup
+	 * @return
+	 */
+	private static boolean judgeBasicTargeting(BidRequest request, Adgroup adgroup,boolean isDebug) {
+		boolean result = true;
+
+		//投放时段
+		String targeting_time_interval = adgroup.getTargeting_time_interval();
+
+		if (targeting_time_interval != null && !"0".equals(targeting_time_interval)) {
+			List<String> times = Arrays.asList(targeting_time_interval.split(","));
+
+			int hours = (LocalDate.now().getDayOfWeek() -1)*24 + LocalTime.now().getHourOfDay() + 1;
+			
+			if (!times.contains(String.valueOf(hours))) {
+				result = false;
+			}
+		}
+		
+		if (!result) {
+			if(isDebug)
+			{
+				logger.debug(String.format("投放时段 adgroupId:%d\tDB.targeting_time_interval:%s", 
+						adgroup.getAdgroup_id(),
+						targeting_time_interval));
+			}
+			return result;
+		}
+		
+		/* 
+		List<String> operators = adgroup.getTargetingOperator().getOperator();
+		switch (adgroup.getTargetingOperator().getSet_type()) {
+		
+		case "defined":
+			
+			if ((operators.contains("10086") && request.getDevice().getCarrier() == 1)
+					||(operators.contains("10010") && request.getDevice().getCarrier() == 3)
+					||(operators.contains("10000") && request.getDevice().getCarrier() == 2)
+					||(operators.contains("other") && request.getDevice().getCarrier() == 0))
+					{
+						result = true;
+					}
+			else
+			{
+				result = false;
+			}
+			break;
+
+		default:
+			result = true;
+			break;
+		}
+		
+		if (!result) {
+			if(isDebug)
+			{
+				logger.debug(String.format("运行�? adgroupId:%d\tDB.targeting_operator.Operator:%s\tRequest.Device.Carrier:%d", 
+						adgroup.getAdgroup_id(),
+						ListUtil.strListToString(operators),
+						request.getDevice().getCarrier()));
+			}
+			return result;
+		}
+		
+		*/
+		//网络环境
+		/**
+		 * connectionType 设备联网方式 
+		 * 0	unknown
+		 * 1	wifi
+		 * 2	2G
+		 * 3	3G
+		 * 4	4G
+		 * 
+		 */
+		
+		/*
+		List<String> networks = adgroup.getTargetingNetwork().getNetwork();
+		switch (adgroup.getTargetingNetwork().getSet_type()) {
+		case "defined":
+			if ((networks.contains("wifi") && request.getDevice().getConnectionType() == 1)
+					||(networks.contains("2g") && request.getDevice().getConnectionType() == 2)
+					||(networks.contains("3g") && request.getDevice().getConnectionType() == 3)
+					||(networks.contains("4g") && request.getDevice().getConnectionType() == 4)
+					||(networks.contains("other") && request.getDevice().getConnectionType() == 0))
+					{
+						result = true;
+					}
+			else
+			{
+				result = false;
+			}
+			break;
+
+		default:
+			result = true;
+			break;
+		}
+		
+		if (!result) {
+			if(isDebug)
+			{
+				logger.debug(String.format("网络环境 adgroupId:%d\tDB.TargetingNetwork.Network:%s\tRequest.Device.ConnectionType:%d", 
+						adgroup.getAdgroup_id(),
+						ListUtil.strListToString(networks),
+						request.getDevice().getConnectionType()));
+			}
+			
+			return result;
+		}
+		*/
+		//地域类型
+		List<GeographicValue> geographicValue = adgroup.getTargeting_geographic().getGeographic_value();
+		
+		switch (adgroup.getTargeting_geographic().getGeographic_category()) {
+		case "all":
+			result = true;
+			break;
+		case "city_level":
+		case "area":
+			if (request.getDevice().getGeo().getProvince() != null && !request.getDevice().getGeo().getProvince().isEmpty()) {
+
+				result = geographicValue.stream().anyMatch(g ->request.getDevice().getGeo().getProvince().equals(g.getName()));
+			}
+			
+			//如果省份已匹配上，那么城市就不需要匹配了�?
+			if (!result && request.getDevice().getGeo().getCity() != null && !request.getDevice().getGeo().getCity().isEmpty()) {
+				
+				result = geographicValue.stream().anyMatch(g -> request.getDevice().getGeo().getCity().equals(g.getName()));
+				
+			}
+			
+			break;
+		case "business":
+			//todo 根据经度和纬度来映射 ID
+			result = isInRegion(request,adgroup,isDebug);
+			break;
+		default:
+			result = true;
+			break;
+		}
+		
+		if (!result && isDebug) {
+			List<String> geographicName = new ArrayList<String>();
+			if(geographicValue != null){
+				geographicValue.stream().forEach(g -> geographicName.add(g.getName()));	
+			}
+			
+			logger.debug(String.format("省份城市 adgroupId:%d\tDB.Targeting_geographic.Geographic_value:%s\tRequest.ext.province:%s\tRequest.ext.city:%s", 
+					adgroup.getAdgroup_id(),
+					ListUtil.strListToString(geographicName),
+					request.getDevice().getGeo().getProvince(),
+					request.getDevice().getGeo().getCity()));
+		}
+		
+		return result;
+	}
+	
+	private static boolean isInRegion(BidRequest request, Adgroup adgroup,boolean isDebug){
+		boolean result = false;
+		Geo geo =  request.getDevice().getGeo();
+		//经度
+		float lat = 0;
+		//纬度
+		float lon = 0;
+		PoiValue poi = null;
+		if(geo != null){
+			lat = request.getDevice().getGeo().getLat();
+			lon = request.getDevice().getGeo().getLon();
+			poi =  adgroup.getTargeting_geographic().getPoi_value();
+			if(poi != null){
+				for(PoiData data : poi.getPoidata()){
+					if(lon >= data.getLocation().getXb() &&
+						lon <= data.getLocation().getXe() &&
+						lat >= data.getLocation().getYb() &&
+						lat <= data.getLocation().getYe()){
+						result = true;
+						break;
+					}
+				}
+			}
+		}
+		
+		if (!result && isDebug) {
+			String poi_String = "" ;
+			if(poi != null){
+				poi_String = JSONObject.toJSONString(poi);
+			}
+			logger.debug(String.format("经纬定位 adgroupId:%d\tDB.Targeting_geographic.PoiValue:%s\tRequest.lat:%s\tRequest.lon:%s", 
+					adgroup.getAdgroup_id(),
+					poi_String,
+					lat,
+					lon));
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 判断 用户在哪里能够看到我的广�?
+	 * @param request
+	 * @param adgroup
+	 * @return
+	 */
+	private static boolean judgeMediaTargeting(BidRequest request, Adgroup adgroup,boolean isDebug)
+	{
+		boolean result = false;
+		
+		String sspId = request.getSsp_id();
+		
+		
+		
+		String sspChn = request.getApp().getCat();
+		
+		//app id
+		String sspContent = request.getApp().getId();
+		
+		TargetingApp targetingApps= adgroup.getTargetingApps();
+		
+		List<String> mediaIds = new ArrayList<String>();
+
+		switch (targetingApps.getSet_type()) {
+		case "all":
+			result = true;
+			break;
+		case "effectsource":
+			//按交易市场选择
+			
+			targetingApps.getMedias().stream().forEach(m -> mediaIds.add(m.getId()));
+
+			//只有正定投，没有反定投
+			result = mediaIds.contains(sspId);
+			
+			if (!result && isDebug) {
+				logger.debug(String.format("交易市场 adgroupId:%d\tDB.Targeting_apps.MediaIds:%s\tRequest.sspId:%s", 
+						adgroup.getAdgroup_id(),
+						ListUtil.strListToString(mediaIds),
+						request.getSsp_id()));
+			}
+			
+			break;
+		case "category":
+						
+			if (sspChn == null) {
+				result = false;
+			}
+			else
+			{
+				targetingApps.getMedias().stream().forEach(m -> mediaIds.add(m.getId()));
+				
+				//request.sspId = targeting_app.Media。Id
+				//request.app.sspChn[1] = targeting_app.Media。Channel.mapping_id
+				Predicate<Media> condition = m -> sspId.equals(m.getId())
+				&& m.getChannels().stream().anyMatch(c -> c.getMapping_id().equals(sspChn));
+				
+				if (targetingApps.getDirection() == 0) {
+					//正定投
+					result = targetingApps.getMedias().stream().anyMatch(condition);
+				}
+				else
+				{
+					//反定投
+					result = !targetingApps.getMedias().stream().anyMatch(condition);
+				}
+			}
+			
+			if (!result && isDebug) {
+				
+				logger.debug(String.format("媒体类型  adgroupId:%d\tDB.Targeting_apps.mediaIds:%s\tRequest.sspId:%s", 
+						adgroup.getAdgroup_id(),
+						ListUtil.strListToString(mediaIds),
+						request.getSsp_id()));
+				
+				String strJson = targetingApps.getMedias() != null ? JSON.toJSONString(targetingApps.getMedias()) : "";
+				logger.debug("DB.Targeting_apps: " + strJson);
+				
+				logger.debug("request.App.SspChn: " + JSON.toJSONString(sspChn));
+			}
+			
+			break;
+		case "app":
+			//按媒体选择
+			
+			targetingApps.getMedias().stream().forEach(m -> mediaIds.add(m.getId()));
+			
+			//request.sspId = targeting_app.Media。Id
+			//argeting_app.Media.Channel. contents. mapping_id包含request.app.sspContent
+			Predicate<Media> condition = m -> sspId.equals(m.getId())
+			&& m.getChannels().stream().anyMatch(
+					c -> c.getContents().stream().anyMatch(t -> sspContent!=null && sspContent.equals(t.getMapping_id())));
+			
+			if (targetingApps.getDirection() == 0) {
+				//正定投
+				result = targetingApps.getMedias().stream().anyMatch(condition);
+			}
+			else
+			{
+				//反定投
+				result = !targetingApps.getMedias().stream().anyMatch(condition);
+			}
+			
+			if (!result && isDebug) {
+				
+				logger.debug(String.format("媒体 adgroupId:%d\tDB.Targeting_apps.MediaIds:%s\tRequest.sspId:%s", 
+						adgroup.getAdgroup_id(),
+						ListUtil.strListToString(mediaIds),
+						request.getSsp_id()));
+				
+				String strJson = targetingApps.getMedias() != null ? JSON.toJSONString(targetingApps.getMedias()) : "";
+				logger.debug("DB.Targeting_apps: " + strJson);
+				
+				logger.debug("request.App.sspContent: " + sspContent);
+			}
+			
+			break;
+		default:
+			break;
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 判断 哪些用户能够看到我的广告
+	 * @param request
+	 * @param adgroup
+	 * @return
+	 */
+	private static boolean judgeWhichUsers(BidRequest request, Adgroup adgroup,boolean isDebug)
+	{
+		boolean result = true;
+		
+		//todo:sdk版本 
+
+		//todo:设备号
+		if(adgroup.getDevice_ids() != null &&
+				adgroup.getDevice_ids().size() > 0 && 
+				!adgroup.getDevice_ids().contains(request.getUser().getUserId())){
+			result = false;
+		}
+		
+ 	
+		return result;
+	}
+	
+	
+	/**
+	 * device id targeting
+	 * @param request
+	 * @param adgroup
+	 * @return
+	 */
+	private static boolean judgeWhichTDP(BidRequest request, Adgroup adgroup,boolean isDebug)
+	{
+		boolean result = true;
+		
+		//人群
+		TargetingDp tdp = adgroup.getTdp();
+		//type为all直接投
+		if(tdp.getSet_type().equals("all")){
+			return result;
+		}
+		String[] data = tdp.getData();
+		//positive
+		if(tdp.getDirection()==0){
+			//遍历data中的key
+			for(String d:data){
+					result=redisUtil.exist(d, request.getUser().getUserId());
+					if(result){
+						return true;
+					}
+					result=redisUtil.exist(d, AdgroupFilter.Encode32ByMd5(request.getUser().getUserId()));
+					if(result){
+						return true;
+					}
+			}
+			return false;
+		//negative
+		}else{
+			for(String d:data){
+					result=redisUtil.exist(d, request.getUser().getUserId());
+					if(result){
+						return false;
+					}
+					result=redisUtil.exist(d, AdgroupFilter.Encode32ByMd5(request.getUser().getUserId()));
+					if(result){
+						return false;
+					}
+			}
+			return true;
+		}
+		
+		
+	}
+	
+	
+	/*
+	 * md5加密
+	 */
+	public static String Encode32ByMd5(String encryptStr)  {
+		try {
+			  MessageDigest md5;  
+		        try {  
+		            md5 = MessageDigest.getInstance("MD5");  
+		            byte[] md5Bytes = md5.digest(encryptStr.getBytes());  
+		            StringBuffer hexValue = new StringBuffer();  
+		            for (int i = 0; i < md5Bytes.length; i++) {  
+		                int val = ((int) md5Bytes[i]) & 0xff;  
+		                if (val < 16)  
+		                    hexValue.append("0");  
+		                hexValue.append(Integer.toHexString(val));  
+		            }  
+		            encryptStr = hexValue.toString();  
+		        } catch (Exception e) {  
+		            throw new RuntimeException(e);  
+		        }  
+		        return encryptStr;  
+			} 
+			catch (Exception e) {
+				
+			}
+			return "";
+		}
+
+	
+	/**
+	 * 判断 出价信息
+	 * @param request
+	 * @param adgroup
+	 * @return
+	 */
+	private static boolean judgeBidPrice(BidRequest request, Adgroup adgroup,boolean isDebug)
+	{
+		boolean result = false;
+		
+		Imp impression = request.getImp().get(0);
+		
+		result = adgroup.getBid_price().compareTo(BigDecimal.valueOf(impression.getBidfloor())) >= 0;
+		
+		if (!result && isDebug) {
+			logger.debug(String.format("出价 adgroupId:%d\tDB.Bid_price:%s\tRequest.impression.Bidfloor:%f", 
+					adgroup.getAdgroup_id(),
+					adgroup.getBid_price().toString(),
+					impression.getBidfloor()));
+		}
+		
+		return result;
+	}
+
+	/**
+	 * 判断设备类型
+	 * @param request
+	 * @param adgroup
+	 * @return
+	 */
+	private static boolean judgeDeviceType(BidRequest request, Adgroup adgroup,boolean isDebug){
+		boolean result = false;
+		
+		String setType = adgroup.getTargetingDevice().getSet_type();
+		
+		if ("all".equals(setType)) {
+			return true;
+		}
+		
+		/**
+		 * 设备类型:
+ * 0    Unknown 
+		 * 1	ios 
+		 * 2	android 
+		 * 3	windows
+		 * 4	wphone
+		 * 5	macos
+		 * 6	linux
+		 */
+		switch(request.getDevice().getOs()){
+		case 1:
+			if("ios".equals(setType)){
+				result = true;
+			}
+			break;
+		case 2:
+			if("android".equals(setType)){
+				result = true;
+			}
+			break;
+		case 3:
+			if("windows".equals(setType)){
+				result = true;
+			}
+			break;
+		case 4:
+			if("wphone".equals(setType)){
+				result = true;
+			}
+			break;
+		case 5:
+			if("macos".equals(setType)){
+				result = true;
+			}
+			break;
+		case 6:
+			if("linux".equals(setType)){
+				result = true;
+			}
+			break;
+		default:
+			result = true;
+			break;
+		}
+
+		if (!result && isDebug) {
+			logger.debug(String.format("after device type: adgroupId:%d\tDB.targeting_device.set_type:%s\tRequest.Device.DeviceType:%d", 
+					adgroup.getAdgroup_id(),
+					setType,
+					request.getDevice().getOs()));
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 判断展示类型
+	 * @param request
+	 * @param adgroup
+	 * @return
+	 */
+	private static boolean judgeDisplayType(BidRequest request, Adgroup adgroup,boolean isDebug){
+		return true;
+		/*
+		boolean result = false;
+		
+		Banner banner = request.getImp().getBanner().get(0);
+		int attr = 0;
+		if(banner != null && banner.getAttr() != null){
+			attr = banner.getAttr().get(0);
+			if(attr == adgroup.getDisplaytype_id()){
+				result = true;
+			}
+		}
+		
+		if (!result && isDebug) {
+			logger.debug(String.format("展示类型 adgroupId:%d\tDB.Displaytype_id:%d\tRequest.banner.attr:%d", 
+					adgroup.getAdgroup_id(),
+					adgroup.getDisplaytype_id(),
+					attr));
+		}
+		
+		return result;*/
+	}
+	
+	
+	/**
+	 * 判断dealid
+	 * @param request
+	 * @param adgroup
+	 * @return
+	 */
+	private static boolean judgeDealid(BidRequest request, Adgroup adgroup,boolean isDebug){
+		boolean result = false;
+		
+		//判断dealid
+		if((request.getPdb() == null || request.getPdb().size() == 0) && 
+				(adgroup.getDeal_id() == null || adgroup.getDeal_id().equals("")))
+		{
+			//如果都为空，则通过
+			result = true; 
+		}
+		else
+		{
+			if(request.getPdb() == null || request.getPdb().size() == 0 
+					|| adgroup.getDeal_id() == null || adgroup.getDeal_id().equals(""))
+			{
+				result = false;
+			}
+			else
+			{
+				result = request.getPdb().contains(adgroup.getDeal_id());
+			}
+		}
+		
+		if (!result && isDebug) {
+			logger.debug(String.format("dealid adgroupId:%d\tDB.dealid:%s\tRequest.pdb:%s", 
+					adgroup.getAdgroup_id(),
+					adgroup.getDeal_id(),
+					ListUtil.strListToString(request.getPdb())));
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 判断 流量类型
+	 * @param request
+	 * @param adgroup
+	 * @return
+	 */
+	private static boolean judgeFlowType(BidRequest request, Adgroup adgroup,boolean isDebug){
+		
+		return true;
+		/* 
+		boolean result = false;
+		
+		if (adgroup.getTargeting_flow_type() == 0) {
+			result = true;
+		}
+		else{
+			result = request.getSourceType() == adgroup.getTargeting_flow_type();
+		}
+		
+		if (!result && isDebug) {
+			logger.debug(String.format(" adgroupId:%d\tDB.Targeting_flow_type:%d\tRequest.SourceType:%d", 
+					adgroup.getAdgroup_id(),
+					adgroup.getTargeting_flow_type(),
+					request.getSourceType()));
+		}
+		
+		return result;
+		*/
+	}
+	
+
+	/**
+	 * 定投
+	 * @param request
+	 * @param adgroup
+	 * @param isDebug
+	 * @return
+	 */
+	private static boolean judgeTargeting(BidRequest request, Adgroup adgroup,boolean isDebug){
+	 
+	/*	if(request.getUser().getPersona_tag() == null ||
+				request.getUser().getPersona_tag().length == 0){
+			return false;
+		}
+		else{
+			List<String> tags = Arrays.asList(request.getUser().getPersona_tag());
+			//年龄
+			if(!doJudgeTargeting(adgroup.getTargeting_demographic_age(),tags)){
+				return false;
+			}
+			//性别
+			if(!doJudgeTargeting(adgroup.getTargeting_demographic_gender(),tags)){
+				return false;
+			}
+			//收入
+			if(!doJudgeTargeting(adgroup.getTargeting_demographic_income(),tags)){
+				return false;
+			}
+		} */
+		return true;
+	}
+	
+	/* private static boolean doJudgeTargeting(Set<String> groupTags,List<String> personTags){
+		boolean result = true;
+		if(groupTags.size()>0){
+			if(Collections.disjoint(groupTags,personTags)){
+				result = false;
+			}
+		}
+		return result;
+	} */
+}

@@ -1,0 +1,15 @@
+package com.yaDsp.model.zhixing;
+
+import java.util.List;
+
+public class ZxSeatBid {
+    List<ZxBid> bids;
+
+    public List<ZxBid> getBids() {
+        return bids;
+    }
+
+    public void setBids(List<ZxBid> bids) {
+        this.bids = bids;
+    }
+}

@@ -1,0 +1,175 @@
+package com.yaDsp.model.zplay.request;
+
+public class ZpDevice {
+    private String os;
+    private boolean dnt;
+    private String osv;
+    private String make;
+    private String model;
+    private String ip;
+    private String ua;
+    private String hwv;
+    private int w;
+    private int h;
+    private int ppi;
+    private String macsha1;
+    private String didsha1;
+    private String language;
+    private String dpidsha1;
+    private ZpConnectionType connectiontype;
+    private ZpDeviceType devicetype;
+    private ZpGeo geo;
+    private ZpDeviceExt ext;
+
+    public String getOs() {
+        return os;
+    }
+
+    public void setOs(String os) {
+        this.os = os;
+    }
+
+    public boolean isDnt() {
+        return dnt;
+    }
+
+    public void setDnt(boolean dnt) {
+        this.dnt = dnt;
+    }
+
+    public String getOsv() {
+        return osv;
+    }
+
+    public void setOsv(String osv) {
+        this.osv = osv;
+    }
+
+    public String getMake() {
+        return make;
+    }
+
+    public void setMake(String make) {
+        this.make = make;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public String getUa() {
+        return ua;
+    }
+
+    public void setUa(String ua) {
+        this.ua = ua;
+    }
+
+    public String getHwv() {
+        return hwv;
+    }
+
+    public void setHwv(String hwv) {
+        this.hwv = hwv;
+    }
+
+    public int getW() {
+        return w;
+    }
+
+    public void setW(int w) {
+        this.w = w;
+    }
+
+    public int getH() {
+        return h;
+    }
+
+    public void setH(int h) {
+        this.h = h;
+    }
+
+    public int getPpi() {
+        return ppi;
+    }
+
+    public void setPpi(int ppi) {
+        this.ppi = ppi;
+    }
+
+    public String getMacsha1() {
+        return macsha1;
+    }
+
+    public void setMacsha1(String macsha1) {
+        this.macsha1 = macsha1;
+    }
+
+    public String getDidsha1() {
+        return didsha1;
+    }
+
+    public void setDidsha1(String didsha1) {
+        this.didsha1 = didsha1;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public String getDpidsha1() {
+        return dpidsha1;
+    }
+
+    public void setDpidsha1(String dpidsha1) {
+        this.dpidsha1 = dpidsha1;
+    }
+
+    public ZpConnectionType getConnectiontype() {
+        return connectiontype;
+    }
+
+    public void setConnectiontype(ZpConnectionType connectiontype) {
+        this.connectiontype = connectiontype;
+    }
+
+    public ZpDeviceType getDevicetype() {
+        return devicetype;
+    }
+
+    public void setDevicetype(ZpDeviceType devicetype) {
+        this.devicetype = devicetype;
+    }
+
+    public ZpGeo getGeo() {
+        return geo;
+    }
+
+    public void setGeo(ZpGeo geo) {
+        this.geo = geo;
+    }
+
+    public ZpDeviceExt getExt() {
+        return ext;
+    }
+
+    public void setExt(ZpDeviceExt ext) {
+        this.ext = ext;
+    }
+}

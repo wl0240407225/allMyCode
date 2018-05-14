@@ -1,0 +1,78 @@
+package com.yaDsp.model.zplay.request;
+
+import java.util.List;
+
+public class ZpBidRequest {
+    private String id;
+    private ZpApp app;
+    private ZpDevice device;
+    private List<ZpImp> imp;
+    private List<String> bcat;
+    private ZpUser user;
+    private boolean test;
+    private ZpBidRequestExt ext;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public ZpApp getApp() {
+        return app;
+    }
+
+    public void setApp(ZpApp app) {
+        this.app = app;
+    }
+
+    public ZpDevice getDevice() {
+        return device;
+    }
+
+    public void setDevice(ZpDevice device) {
+        this.device = device;
+    }
+
+    public List<ZpImp> getImp() {
+        return imp;
+    }
+
+    public void setImp(List<ZpImp> imp) {
+        this.imp = imp;
+    }
+
+    public List<String> getBcat() {
+        return bcat;
+    }
+
+    public void setBcat(List<String> bcat) {
+        this.bcat = bcat;
+    }
+
+    public ZpUser getUser() {
+        return user;
+    }
+
+    public void setUser(ZpUser user) {
+        this.user = user;
+    }
+
+    public boolean isTest() {
+        return test;
+    }
+
+    public void setTest(boolean test) {
+        this.test = test;
+    }
+
+    public ZpBidRequestExt getExt() {
+        return ext;
+    }
+
+    public void setExt(ZpBidRequestExt ext) {
+        this.ext = ext;
+    }
+}

@@ -1,0 +1,27 @@
+package com.yaDsp.trc;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class TrcEventDispatcher {
+	
+	private static TrcEventDispatcher instance=new TrcEventDispatcher();
+	private TrcEventDispatcher() {};
+	
+	public static TrcEventDispatcher getIntance() {		
+		return instance;
+	}
+	
+	public void RegisterListener(TrcEventListener listen) {
+		listeners.add(listen);
+	}
+	
+	public void Dispatch(TrcModel model) {
+		for(TrcEventListener l:listeners) {
+			l.handle(model);
+		}
+	}
+	
+	List<TrcEventListener> listeners=new ArrayList<TrcEventListener>() ;
+
+}

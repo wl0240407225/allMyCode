@@ -1,0 +1,105 @@
+package com.yaDsp.strategy.impl;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.material.model.BudgetControl;
+import com.yaDsp.material.model.SmoothlySpent;
+import com.yaDsp.model.standard.request.BidRequest;
+import com.yaDsp.strategy.FilterStrategy;
+import com.yaDsp.util.DateFormatterUtil;
+ 
+  
+public class SmoothlySpentStrategy  implements FilterStrategy {
+
+ 
+	BudgetManager bm=new BudgetManager();
+
+	 
+	AmountManager am=new AmountManager();
+	 
+	
+	@Override
+	public List<Ad> execute(BidRequest request, List<Ad> ads) {
+		List<Ad> result = new ArrayList<Ad>();
+		if(ads != null && ads.size() > 0)
+		{
+			
+			for (Ad ad : ads) 
+			{
+				boolean isOverSpeed = false;
+				Date date = new Date();
+				if(ad.adgroup.getSmoothlySpent() != null )
+				{
+					SmoothlySpent ss = ad.adgroup.getSmoothlySpent();
+					if(ss.smoothlyType == 2 && ad.adgroup.getDaily_budget() != null)
+					{
+						BudgetControl bc = ad.adgroup.getDaily_budget();
+						if(bc.ControlType == 1 || bc.ControlType == 3){
+							long todayCamSpent = bm.getAdgroupDaySpent(DateFormatterUtil.getDate(date), ad.adgroupId);
+							isOverSpeed = isOutOfSpeed(ad.adgroup.getSmoothlySpent().adHours, bc.DialyBudget,todayCamSpent,date);
+						}
+						else if(bc.ControlType == 2 && ss.totalDays > 0 && bc.TotalBudget > 0)
+						{ 
+							if(ss.activeDays != null && ss.activeDays.size() > 0){ 
+								int today = DateFormatterUtil.getDate(date);
+								long remainingDaysCount = ss.activeDays.stream().filter(x-> x >= today).count();
+								long todayCamSpent = bm.getAdgroupDaySpent(today, ad.adgroupId);
+								long camBudgetBalance = bc.TotalBudget -bm.getAdgroupTotalSpent(ad.adgroupId)+ todayCamSpent;
+								long todayCamBudget = camBudgetBalance / remainingDaysCount ;
+								isOverSpeed = isOutOfSpeed(ad.adgroup.getSmoothlySpent().adHours, todayCamBudget,todayCamSpent ,date);
+							}
+						}
+					}//todo: ...........
+					else if(ss.smoothlyType == 1 && ad.adgroup.getImp_control() != null)
+					{
+						
+					}
+					if(isOverSpeed) continue;
+				}
+				result.add(ad);
+			}	
+		}
+		return result;
+	}
+
+	/**
+	 * 根据campaing日预算，当前消费，判断是否超速投�?
+	 * @param ad
+	 * @param todayCamBudget
+	 * @return
+	 */
+	@SuppressWarnings("deprecation")
+	public boolean isOutOfSpeed(HashMap<Integer,String> adHours, long todayCamBudget,long todayCamSpent,Date date) {
+		boolean isOutofSpeed = false;
+		int dayOfWeek = DateFormatterUtil.getDayOfWeek(date);
+		if(adHours != null)
+		{
+			 String todayAdHours = adHours.get(dayOfWeek);
+			 int totalSeconds = StringUtils.countMatches(todayAdHours, '1') * 3600; 
+			 int pastHours = StringUtils.countMatches(todayAdHours.substring(0, date.getHours()),'1');
+			 int pastSeconds = pastHours * 3600 + date.getMinutes()*60 + date.getSeconds();
+			   
+			 
+			 if(todayCamBudget > 0 && totalSeconds > 0 && pastSeconds > 0){
+				 double speed = (todayCamSpent*1.0/todayCamBudget) / (pastSeconds * 1.0 /totalSeconds);
+				 isOutofSpeed = speed > 1.0;
+			 }
+		}
+		return isOutofSpeed;
+	}
+
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return "SmoothlySpent";
+	}
+
+	
+
+}

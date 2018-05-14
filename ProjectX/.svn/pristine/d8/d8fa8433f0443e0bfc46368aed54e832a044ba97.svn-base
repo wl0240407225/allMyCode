@@ -1,0 +1,220 @@
+package com.yaDsp.strategy.impl;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.util.RedisUtil;
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Response;
+ 
+
+
+/**
+ * 为了方便，Redis中存储的单位为： 0.001分。
+ * @author wangyufeng
+ *
+ */
+ 
+public class BudgetManager { 
+
+	 
+	private  RedisUtil redisUtil=new RedisUtil();
+	private int seconds  = 3600*24 *4; //按日key的expire秒数
+	
+	private static Logger logger = LoggerFactory.getLogger(BudgetManager.class);
+	
+	/**
+	 * 获取Campaign某日的花费. 单位分
+	 * @param day
+	 * @param campaignId
+	 * @return 0：没有取得值.  单位分
+	 */
+	public  long getCampaignDaySpent(int day,long campaignId)
+	{
+		String key  = getCamDaySpentKey(day, campaignId);
+		long value = redisUtil.getLongByKey(key);
+		if	(value >= 0)
+		{
+			return redisUtil.getLongByKey(key)/1000;
+		}else
+		{
+			return -1;
+		} 
+	}
+	
+	
+	
+	/**
+	 * 获取Campain总花费. 单位分
+	 * @param campaignId
+	 * @return0：没有取得值.  单位分
+	 */
+	public  long getCampaignTotalSpent(long campaignId)
+	{ 
+		String key  = getCamTotalSpentKey(campaignId);
+		
+		long value = redisUtil.getLongByKey(key);
+		if	(value >= 0)
+		{
+			return redisUtil.getLongByKey(key)/1000;
+		}else
+		{
+			return -1;
+		} 
+		
+	}
+	
+	/**
+	 * 获取Adgoup日花费. 单位0.001分
+	 * @param day
+	 * @param adgroupId
+	 * @return 0：没有取得值.  单位分
+	 */
+	public  long getAdgroupDaySpent(int day,long adgroupId)
+	{
+		String key  = getAdgroupDaySpentKey(day, adgroupId); 
+		long value = redisUtil.getLongByKey(key);
+		if	(value >= 0)
+		{
+			return redisUtil.getLongByKey(key)/1000;
+		}else
+		{
+			return -1;
+		} 
+	}
+
+	/**
+	 * 获取Adgoup总花费. 单位分
+	 * @param adgroupId
+	 * @return 0：没有取得值.  单位分
+	 */
+	public  long getAdgroupTotalSpent(long adgroupId)
+	{
+		String key  = getAdgroupTotalSpentKey(adgroupId);
+		long value = redisUtil.getLongByKey(key);
+		if	(value >= 0)
+		{
+			return redisUtil.getLongByKey(key)/1000;
+		}else
+		{
+			return -1;
+		} 
+	}
+	
+	
+
+
+	/**
+	 * 单位0.001分
+	 * 添加花费：adgrouDaySpent，adgroupTotalSpent，CampaignDaySpent，CampaignTotalSpent，
+	 * 扣除预算：AccountBalance
+	 * 
+	 * @param day yyyymmdd
+	 * @param adgroupId
+	 * @param campaignId
+	 * @param accountId 
+	 * @param spent 单位0.001分
+	 */
+	public void incrSpent(int day,long adgroupId,long campaignId,int spent)
+	{
+		Jedis j = null;
+		try{
+			j = redisUtil.getWriteInstance();
+			String adgroupDayKey = getAdgroupDaySpentKey(day, adgroupId);
+			String adgroupTotalKey = getAdgroupTotalSpentKey(adgroupId);
+			String camDayKey = getCamDaySpentKey(day, campaignId);
+			String camTotalKey = getCamTotalSpentKey(campaignId);
+			Pipeline pipeline = j.pipelined();
+			Response<Long> groupDayValue = pipeline.incrBy(adgroupDayKey,spent);
+			pipeline.incrBy(adgroupTotalKey, spent);
+			Response<Long> campaignDayValue = pipeline.incrBy(camDayKey,spent);
+			pipeline.incrBy(camTotalKey,spent);
+			pipeline.sync();  
+	
+			if(groupDayValue.get() > 0 && groupDayValue.get() < 10000)//10000=1毛
+			{	
+				j.expire(adgroupDayKey, seconds);
+			}
+			if(campaignDayValue.get() > 0 && campaignDayValue.get() < 10000)//10000=1毛
+			{	 
+				j.expire(camDayKey, seconds); 
+			} 
+		}catch(Exception ex)
+		{
+			logger.error("incrSpentRedisError:" ,ex);
+		}
+		finally
+		{
+			if(j != null) 
+				j.close(); 
+		}
+	}
+	
+	
+	
+	
+
+	
+	private  String getCamDaySpentKey(int day, long campaignId)
+	{
+		return String.format("csd%s%s", day,campaignId);
+	}
+	
+	private  String getCamTotalSpentKey(long campaignId)
+	{
+		return String.format("cst%s",campaignId);
+	}
+	private  String getAdgroupDaySpentKey(int day, long adgroupId)
+	{
+		return String.format("gsd%s%s", day,adgroupId);
+	}
+	private  String getAdgroupTotalSpentKey(long adgroupId)
+	{
+		return String.format("gst%s", adgroupId);
+	}
+	
+	
+	/**
+	 * 设置预算
+	 * @param day
+	 * @param adgroupId
+	 * @param campaignId
+	 * @param spent
+	 */
+	public void setSpent(int day,long adgroupId,long campaignId,int spent)
+	{
+		Jedis j = redisUtil.getWriteInstance();
+		String adgroupDayKey = getAdgroupDaySpentKey(day, adgroupId);
+		String adgroupTotalKey = getAdgroupTotalSpentKey(adgroupId);
+		String camDayKey = getCamDaySpentKey(day, campaignId);
+		String camTotalKey = getCamTotalSpentKey(campaignId);
+		Pipeline pipeline = j.pipelined();
+		pipeline.set(adgroupDayKey,Integer.toString(spent));
+		pipeline.set(adgroupTotalKey,Integer.toString(spent));
+		pipeline.set(camDayKey,Integer.toString(spent));
+		pipeline.set(camTotalKey,Integer.toString(spent));
+		pipeline.sync();  
+		j.close(); 
+	}
+	
+	/**
+	 * 单独设置总预算
+	 * @param adgroupId
+	 * @param campaignId
+	 * @param spent
+	 */
+	public void setTotalSpent(long adgroupId,long campaignId,int spent)
+	{
+		Jedis j = redisUtil.getWriteInstance();
+		String adgroupTotalKey = getAdgroupTotalSpentKey(adgroupId);
+		String camTotalKey = getCamTotalSpentKey(campaignId);
+		Pipeline pipeline = j.pipelined();
+		pipeline.set(adgroupTotalKey,Integer.toString(spent));
+		pipeline.set(camTotalKey,Integer.toString(spent));
+		pipeline.sync();  
+		j.close(); 
+	}
+}
+

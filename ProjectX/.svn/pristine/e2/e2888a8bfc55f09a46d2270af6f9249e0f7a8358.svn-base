@@ -1,0 +1,8 @@
+package com.yaDsp.model.zplay.request;
+
+public enum ZpLocationType {
+    Zero,
+    GPS_LOCATION,
+    IP,
+    USER_PROVIDED
+}

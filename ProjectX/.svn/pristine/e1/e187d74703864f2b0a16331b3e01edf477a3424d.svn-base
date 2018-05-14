@@ -1,0 +1,22 @@
+package com.yaDsp.model.standard.response;
+
+public class RespAssetImage {
+    private int id;
+    private RespNativeImage img;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public RespNativeImage getImg() {
+        return img;
+    }
+
+    public void setImg(RespNativeImage img) {
+        this.img = img;
+    }
+}

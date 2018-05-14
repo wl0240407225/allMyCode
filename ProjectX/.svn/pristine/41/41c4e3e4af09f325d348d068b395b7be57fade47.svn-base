@@ -1,0 +1,54 @@
+package com.yaDsp.material.model;
+
+ 
+
+import java.util.HashMap;
+import java.util.List;
+
+ 
+
+public class Ad {
+	
+	
+	//策略算法用字段
+	public int strategy_ext_bid_price;
+	public double strategy_ext_ctr;
+	public String strategy_ext_name;
+	
+	public long campiagnId;
+	public long adgroupId;
+	public long creativeId; 
+	public long accountId;
+	
+	/**
+	 * 出价，单位分
+	 */
+	public int MaxBid;
+	
+	
+	/**
+	 * 白名单
+	 */
+	public List<String> whitelist;
+	
+	
+	
+	
+	//  追加 新字段
+
+	/**
+	 * 扩展字段
+	 */
+	public HashMap<String,Object> Ext;
+
+	public Campaign campaign;
+	
+	public Adgroup adgroup;
+	
+	public CreativeUnit creativeUnit;
+	
+	public Creative creative;
+	
+	public Account account;
+	
+} 

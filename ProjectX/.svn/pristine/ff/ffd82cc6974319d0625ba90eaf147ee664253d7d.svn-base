@@ -1,0 +1,59 @@
+package com.yaDsp.trc;
+
+import org.apache.commons.lang3.StringUtils;
+
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class TrcHandler extends HttpServlet{
+
+ 
+	private static final long serialVersionUID = 986585617863104212L;
+	
+	@Override
+	protected void doPost(HttpServletRequest baseRequest,
+			HttpServletResponse response) throws ServletException, IOException {
+		handle(baseRequest,response);
+	
+	}	
+	
+	@Override
+	protected void doGet(HttpServletRequest baseRequest,
+			HttpServletResponse response) throws ServletException, IOException {
+		handle(baseRequest,response);
+	
+	}
+	
+	private void handle(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException{
+		
+		TrcModel model=new TrcModel();
+		model.setAct(request.getParameter("act"));
+		model.setId(request.getParameter("k0"));
+		model.setCreativeId(request.getParameter("k1"));
+		model.setAdgroupId(request.getParameter("k2"));
+		model.setCampaignId(request.getParameter("k3"));
+		model.setDeviceId(request.getParameter("k4"));
+		model.setSspId(request.getParameter("k5"));
+		model.setAppId(request.getParameter("k6"));
+		model.setBidPrice(request.getParameter("k7"));
+		model.setSlottoken(request.getParameter("k8"));
+		model.setIP(request.getParameter("k9"));
+		model.setRealIP(request.getParameter("k10"));
+
+		String price = request.getParameter("k11");
+		if (StringUtils.isNumeric(price)) {
+			model.setDecryptedPrice(Integer.valueOf(price));
+		} else{
+			model.setDecryptedPrice(0);
+		}
+
+		TrcEventDispatcher.getIntance().Dispatch(model);
+		
+	}
+
+}

@@ -1,0 +1,687 @@
+package com.yaDsp.material.model;
+
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
+
+public class Adgroup {
+
+	/**  
+ * 
+ */
+	int adgroup_id;
+
+	/**  
+ * 
+ */
+	int account_id;
+
+	/**  
+ * 
+ */
+	int campaign_id;
+
+	/**
+	 * 广告分类
+	 */
+	int ad_category;
+
+	/**
+	 * 设备号
+	 */
+	HashSet<String> device_ids;
+
+	public HashSet<String> getDevice_ids() {
+		return device_ids;
+	}
+
+	public void setDevice_ids(HashSet<String> device_ids) {
+		this.device_ids = device_ids;
+	}
+
+	/**
+ *   
+ */
+	String ad_objective;
+
+	/** ad_objective 新字段
+	 *
+	 */
+	AdObjective adObjective;	
+
+	/**
+	 * 广告展示类型
+	 */
+	short displaytype_id;
+
+	/**
+	 * 0 all 1 ios 2 andriod
+	 */
+	short os_type_id;
+
+	/**  
+ * 
+ */
+	long itunes_appid;
+
+	/**  
+ * 
+ */
+	String bundleid;
+
+	/**
+	 * 频次控制[daily:dd]
+	 */
+	FrequencyControl frequencycap;
+
+	/**
+	 * 投放时间段定向[130130168]
+	 */
+	String targeting_time_interval;
+
+	/**
+	 * 设备定向
+	 */
+	String targeting_device;
+	
+	/**
+	 * 设备定向 新字段
+	 */
+	TargetingDevice targetingDevice;
+
+	/**
+	 * SKD版本定向
+	 */
+	String targeting_sdkversion;
+
+	/**
+	 * 操作系统定向
+	 */
+	String targeting_osversion;
+
+	/**
+	 * 运营商定向 新字段
+	 */
+	TargetingOperator targetingOperator;
+
+
+	/**
+	 * 设备网络  新字段
+	 */
+	TargetingNetwork targetingNetwork;
+
+	/**
+	 * 设备价格定向
+	 */
+	String targeting_deviceprice;
+
+	/**
+	 * 年龄定向
+	 */
+	Set<String> targeting_demographic_age;
+
+	public TargetingDp getTdp() {
+		return tdp;
+	}
+
+	public void setTdp(TargetingDp tdp) {
+		this.tdp = tdp;
+	}
+
+	/**  
+ * 
+ */
+	Set<String> targeting_demographic_gender;
+	
+	/*
+	 * 人群
+	 */
+	TargetingDp tdp;
+
+
+	/**
+	 * 百度贴吧-消费水平定投
+	 */
+	String targeting_consumption_levels;
+
+	/**
+	 * 百度贴吧-人群学历定投
+	 */
+	String targeting_qualifications;
+
+	/**
+	 * 百度贴吧-用户兴趣定投
+	 */
+	String targeting_interestuser;
+
+	/**
+	 * 百度贴吧-人生阶段定投
+	 */
+	String targeting_life_stages;
+
+	/**
+	 * 百度贴吧（广告位置定投）
+	 */
+	String targeting_adpositions;
+
+	/**  
+ * 
+ */
+	Set<String> targeting_demographic_income;
+
+	/**
+	 * 感兴趣的应用分类
+	 */
+	String targeting_demographic_interestapp;
+
+	/**
+	 * 应用分类定投
+	 */
+	String targeting_app_category;
+
+	/**
+	 * DEFAULT 1 投放流量类型（0：不限1：APP流量2：web流量）
+	 */
+	short targeting_flow_type;
+
+	/**
+	 * 应用定投字段(json) 
+	 */
+	TargetingApp targetingApps;
+
+	/**
+	 * 地理定向类型
+	 */
+	String targeting_geographic_type;
+
+	/**
+	 * 地理定向内容 新字段
+	 */
+	TargetingGeographic targeting_geographic;
+	
+	/**
+	 * 设备品牌定向
+	 */
+	String targeting_brand;
+
+	/**  
+ * 
+ */
+	String targeting_tags;
+
+	/**
+	 * DEFAULT 0 定向包ID0代表未应用定向包
+	 */
+	int targeting_id;
+
+	/**
+	 * 广告组出价
+	 */
+	BigDecimal bid_price;
+
+	/**
+	 * 点击控量
+	 */
+	AmountControl cli_control;
+
+	/**
+	 * 总展示控量
+	 */
+	//AmountControl imp_sum_control;
+
+	/**
+	 * 展示控量
+	 */
+	AmountControl imp_control;
+
+	/**
+	 * 转化率优化
+	 */
+	String conversion_optimize;
+
+	/**
+	 * 广告组状态
+	 */
+	short status;
+
+	/**
+	 * 被复制的广告组id，只有复制时才用到
+	 */
+	int copy_from;
+
+	/**
+	 * 计费方式 2-CPC 1-CPM 具体参见dim_ad_bidtype
+	 */
+	int bid_type;
+
+	/**
+	 * 计费类型 1 竞价 2 定价
+	 */
+	short bid_way;
+
+	/**
+	 * 素材播放时长
+	 */
+	int material_duration_play;
+
+	/**
+	 * DEFAULT 0.0000 评价CPA单价
+	 */
+	BigDecimal cpa_price;
+
+	/**
+	 * 优先采买
+	 */
+	String deal_id;
+
+	/**
+	 * 日预算
+	 */
+	BudgetControl daily_budget;
+
+	/**
+	 * 均匀投放信息
+	 */
+	private SmoothlySpent smoothlySpent;
+	
+	public TargetingGeographic getTargeting_geographic() {
+		return targeting_geographic;
+	}
+
+	public void setTargeting_geographic(TargetingGeographic targeting_geographic) {
+		this.targeting_geographic = targeting_geographic;
+	}
+
+	public TargetingOperator getTargetingOperator() {
+		return targetingOperator;
+	}
+
+	public void setTargetingOperator(TargetingOperator targetingOperator) {
+		this.targetingOperator = targetingOperator;
+	}
+
+	public TargetingNetwork getTargetingNetwork() {
+		return targetingNetwork;
+	}
+
+	public void setTargetingNetwork(TargetingNetwork targetingNetwork) {
+		this.targetingNetwork = targetingNetwork;
+	}
+
+	public SmoothlySpent getSmoothlySpent() {
+		return smoothlySpent;
+	}
+
+	public void setSmoothlySpent(SmoothlySpent smoothlySpent) {
+		this.smoothlySpent = smoothlySpent;
+	}
+	
+	public TargetingApp getTargetingApps() {
+		return targetingApps;
+	}
+
+	public void setTargetingApps(TargetingApp targetingApps) {
+		this.targetingApps = targetingApps;
+	}
+	
+	public int getAdgroup_id() {
+		return adgroup_id;
+	}
+
+	public void setAdgroup_id(int adgroup_id) {
+		this.adgroup_id = adgroup_id;
+	}
+
+	public int getAccount_id() {
+		return account_id;
+	}
+
+	public void setAccount_id(int account_id) {
+		this.account_id = account_id;
+	}
+
+	public int getCampaign_id() {
+		return campaign_id;
+	}
+
+	public void setCampaign_id(int campaign_id) {
+		this.campaign_id = campaign_id;
+	}
+
+	public int getAd_category() {
+		return ad_category;
+	}
+
+	public void setAd_category(int ad_category) {
+		this.ad_category = ad_category;
+	}
+
+	public String getAd_objective() {
+		return ad_objective;
+	}
+
+	public void setAd_objective(String ad_objective) {
+		this.ad_objective = ad_objective;
+	}
+
+	public short getDisplaytype_id() {
+		return displaytype_id;
+	}
+
+	public void setDisplaytype_id(short displaytype_id) {
+		this.displaytype_id = displaytype_id;
+	}
+
+	public short getOs_type_id() {
+		return os_type_id;
+	}
+
+	public void setOs_type_id(short os_type_id) {
+		this.os_type_id = os_type_id;
+	}
+
+	public long getItunes_appid() {
+		return itunes_appid;
+	}
+
+	public void setItunes_appid(long itunes_appid) {
+		this.itunes_appid = itunes_appid;
+	}
+
+	public String getBundleid() {
+		return bundleid;
+	}
+
+	public void setBundleid(String bundleid) {
+		this.bundleid = bundleid;
+	}
+
+	public FrequencyControl getFrequencycap() {
+		return frequencycap;
+	}
+
+	public void setFrequencycap(FrequencyControl frequencycap) {
+		this.frequencycap = frequencycap;
+	}
+
+	public String getTargeting_time_interval() {
+		return targeting_time_interval;
+	}
+
+	public void setTargeting_time_interval(String targeting_time_interval) {
+		this.targeting_time_interval = targeting_time_interval;
+	}
+
+	public String getTargeting_device() {
+		return targeting_device;
+	}
+
+	public void setTargeting_device(String targeting_device) {
+		this.targeting_device = targeting_device;
+	}
+
+	public String getTargeting_sdkversion() {
+		return targeting_sdkversion;
+	}
+
+	public void setTargeting_sdkversion(String targeting_sdkversion) {
+		this.targeting_sdkversion = targeting_sdkversion;
+	}
+
+	public String getTargeting_osversion() {
+		return targeting_osversion;
+	}
+
+	public void setTargeting_osversion(String targeting_osversion) {
+		this.targeting_osversion = targeting_osversion;
+	}
+
+	public String getTargeting_deviceprice() {
+		return targeting_deviceprice;
+	}
+
+	public void setTargeting_deviceprice(String targeting_deviceprice) {
+		this.targeting_deviceprice = targeting_deviceprice;
+	}
+
+	public Set<String> getTargeting_demographic_age() {
+		return targeting_demographic_age;
+	}
+
+	public void setTargeting_demographic_age(Set<String> targeting_demographic_age) {
+		this.targeting_demographic_age = targeting_demographic_age;
+	}
+
+	public Set<String> getTargeting_demographic_gender() {
+		return targeting_demographic_gender;
+	}
+
+	public void setTargeting_demographic_gender(Set<String> targeting_demographic_gender) {
+		this.targeting_demographic_gender = targeting_demographic_gender;
+	}
+
+	public String getTargeting_consumption_levels() {
+		return targeting_consumption_levels;
+	}
+
+	public void setTargeting_consumption_levels(String targeting_consumption_levels) {
+		this.targeting_consumption_levels = targeting_consumption_levels;
+	}
+
+	public String getTargeting_qualifications() {
+		return targeting_qualifications;
+	}
+
+	public void setTargeting_qualifications(String targeting_qualifications) {
+		this.targeting_qualifications = targeting_qualifications;
+	}
+
+	public String getTargeting_interestuser() {
+		return targeting_interestuser;
+	}
+
+	public void setTargeting_interestuser(String targeting_interestuser) {
+		this.targeting_interestuser = targeting_interestuser;
+	}
+
+	public String getTargeting_life_stages() {
+		return targeting_life_stages;
+	}
+
+	public void setTargeting_life_stages(String targeting_life_stages) {
+		this.targeting_life_stages = targeting_life_stages;
+	}
+
+	public String getTargeting_adpositions() {
+		return targeting_adpositions;
+	}
+
+	public void setTargeting_adpositions(String targeting_adpositions) {
+		this.targeting_adpositions = targeting_adpositions;
+	}
+
+	public Set<String> getTargeting_demographic_income() {
+		return targeting_demographic_income;
+	}
+
+	public void setTargeting_demographic_income(Set<String> targeting_demographic_income) {
+		this.targeting_demographic_income = targeting_demographic_income;
+	}
+
+	public String getTargeting_demographic_interestapp() {
+		return targeting_demographic_interestapp;
+	}
+
+	public void setTargeting_demographic_interestapp(
+			String targeting_demographic_interestapp) {
+		this.targeting_demographic_interestapp = targeting_demographic_interestapp;
+	}
+
+	public String getTargeting_app_category() {
+		return targeting_app_category;
+	}
+
+	public void setTargeting_app_category(String targeting_app_category) {
+		this.targeting_app_category = targeting_app_category;
+	}
+
+	public short getTargeting_flow_type() {
+		return targeting_flow_type;
+	}
+
+	public void setTargeting_flow_type(short targeting_flow_type) {
+		this.targeting_flow_type = targeting_flow_type;
+	}
+
+	public String getTargeting_geographic_type() {
+		return targeting_geographic_type;
+	}
+
+	public void setTargeting_geographic_type(String targeting_geographic_type) {
+		this.targeting_geographic_type = targeting_geographic_type;
+	}
+
+	public String getTargeting_brand() {
+		return targeting_brand;
+	}
+
+	public void setTargeting_brand(String targeting_brand) {
+		this.targeting_brand = targeting_brand;
+	}
+
+	public String getTargeting_tags() {
+		return targeting_tags;
+	}
+
+	public void setTargeting_tags(String targeting_tags) {
+		this.targeting_tags = targeting_tags;
+	}
+
+	public int getTargeting_id() {
+		return targeting_id;
+	}
+
+	public void setTargeting_id(int targeting_id) {
+		this.targeting_id = targeting_id;
+	}
+
+	public BigDecimal getBid_price() {
+		return bid_price;
+	}
+
+	public void setBid_price(BigDecimal bid_price) {
+		this.bid_price = bid_price;
+	}
+
+	public AmountControl getCli_control() {
+		return cli_control;
+	}
+
+	public void setCli_control(AmountControl cli_control) {
+		this.cli_control = cli_control;
+	}
+
+	//public AmountControl getImp_sum_control() {
+		//return imp_sum_control;
+	//}
+
+	//public void setImp_sum_control(AmountControl imp_sum_control) {
+		//this.imp_sum_control = imp_sum_control;
+	//}
+
+	public AmountControl getImp_control() {
+		return imp_control;
+	}
+
+	public void setImp_control(AmountControl imp_control) {
+		this.imp_control = imp_control;
+	}
+
+	public String getConversion_optimize() {
+		return conversion_optimize;
+	}
+
+	public void setConversion_optimize(String conversion_optimize) {
+		this.conversion_optimize = conversion_optimize;
+	}
+
+	public short getStatus() {
+		return status;
+	}
+
+	public void setStatus(short status) {
+		this.status = status;
+	}
+
+	public int getCopy_from() {
+		return copy_from;
+	}
+
+	public void setCopy_from(int copy_from) {
+		this.copy_from = copy_from;
+	}
+
+	public int getBid_type() {
+		return bid_type;
+	}
+
+	public void setBid_type(int bid_type) {
+		this.bid_type = bid_type;
+	}
+
+	public short getBid_way() {
+		return bid_way;
+	}
+
+	public void setBid_way(short bid_way) {
+		this.bid_way = bid_way;
+	}
+
+	public int getMaterial_duration_play() {
+		return material_duration_play;
+	}
+
+	public void setMaterial_duration_play(int material_duration_play) {
+		this.material_duration_play = material_duration_play;
+	}
+
+	public BigDecimal getCpa_price() {
+		return cpa_price;
+	}
+
+	public void setCpa_price(BigDecimal cpa_price) {
+		this.cpa_price = cpa_price;
+	}
+
+	public String getDeal_id() {
+		return deal_id;
+	}
+
+	public void setDeal_id(String deal_id) {
+		this.deal_id = deal_id;
+	}
+
+	public BudgetControl getDaily_budget() {
+		return daily_budget;
+	}
+
+	public void setDaily_budget(BudgetControl daily_budget) {
+		this.daily_budget = daily_budget;
+	}
+
+	public AdObjective getAdObjective() {
+		return adObjective;
+	}
+
+	public void setAdObjective(AdObjective adObjective) {
+		this.adObjective = adObjective;
+	}
+
+	public TargetingDevice getTargetingDevice() {
+		return targetingDevice;
+	}
+
+	public void setTargetingDevice(TargetingDevice targetingDevice) {
+		this.targetingDevice = targetingDevice;
+	}	
+}

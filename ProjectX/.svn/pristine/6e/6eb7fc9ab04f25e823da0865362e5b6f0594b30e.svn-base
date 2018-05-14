@@ -1,0 +1,453 @@
+package com.yaDsp.material;
+ 
+import java.math.BigDecimal;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.sql.Date;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.material.model.*;
+import com.yaDsp.util.Database;
+
+
+public class MaterialReader  {
+
+	private static Logger logger = LoggerFactory
+	   	.getLogger(MaterialReader.class);
+
+	 
+	public List<Creative> getAds(List<Integer> ids) {
+		ResultSet rs = null;
+		PreparedStatement pstmt = null;
+		List<String> idstr = ids.stream().map(i -> i.toString())
+				.collect(Collectors.toList());
+		String p = String.join(",", idstr);
+
+		String sql = "select * from ad_creative where status  in (1,2) and creative_id in (" + p
+				+ ")";
+		List<Creative> result = new ArrayList<Creative>();
+		
+		if(p.equals("")){
+			return result;
+		}
+
+		try {
+			pstmt = Database.getInstance().getConnection()
+					.prepareStatement(sql);
+			// 对占位符设置值，占位符顺序从1开始，第一个参数是占位符的位置，第二个参数是占位符的值。
+			// pstmt.setString(1, "");
+			rs = pstmt.executeQuery();
+			// enum AdStatus {
+			// REMOVED = 0; // 已删除
+			// REVIEW = 1; // 审核中
+			// FAILED = 5; // 审核未通过
+			// RELEASE = 2; // 发布中
+			// PAUSE = 3; // 暂停
+			// TERMINAL = 4; // 终止
+			// }
+			while (rs.next()) {
+				try{
+					Creative model = new Creative();			
+					model.setAccount_id(rs.getInt("account_id"));
+					model.setAdgroup_id(rs.getInt("adgroup_id"));
+					model.setCampaign_id(rs.getInt("campaign_id"));
+					model.setCreative_unit_id(rs.getInt("creative_unit_id"));
+					model.setCreative_id(rs.getInt("creative_id"));
+					model.setDisplaytype_id(rs.getShort("displaytype_id"));
+					model.setHeight(rs.getShort("height"));
+					model.setImg_url(rs.getString("img_url"));
+					model.setImg_type(rs.getInt("img_type"));
+					model.setInfo(rs.getString("info"));
+					model.setWidth(rs.getShort("width"));
+					model.setUp_type(rs.getString("up_type"));
+					model.setSsp_template_id(rs.getString("ssp_template_id"));
+					String third=rs.getString("third_audit");
+					//Hashtable<Integer,Integer> hashtable=TargetConverter.ConvertThirdAudit(third);
+					Hashtable<Integer,Hashtable<String,Integer>> hashtable=TargetConverter.ConvertThirdAudit(third);
+					model.setThird_creative(hashtable);
+					result.add(model);
+				}
+				catch (Exception e){
+					logger.error("物料同步异常creative_id:" + rs.getString("creative_id"), e);
+				}
+			}
+		} catch (SQLException e) {
+			logger.error("查询数据异常", e);
+		} finally {
+			Database.colseResult(rs);
+			Database.colsePstmt(pstmt);
+			Database.getInstance().closeConnection();
+		}
+		return result;
+	}
+ 
+	public List<CreativeUnit> getCreativeUnit(List<Integer> ids) {
+		ResultSet rs = null;
+		PreparedStatement pstmt = null;
+		List<String> idstr = ids.stream().map(i -> i.toString())
+				.collect(Collectors.toList());
+		String p = String.join(",", idstr);
+		String sql = "select * from ad_creative_unit where status=2 and creative_unit_id in ("
+				+ p + ")";
+		List<CreativeUnit> result = new ArrayList<CreativeUnit>();
+		if(p.equals("")){
+			return result;
+		}
+		try {
+			pstmt = Database.getInstance().getConnection()
+					.prepareStatement(sql);
+			// 对占位符设置值，占位符顺序从1开始，第一个参数是占位符的位置，第二个参数是占位符的值。
+			// pstmt.setString(1, "");
+			rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				try{
+					CreativeUnit model = new CreativeUnit();
+					model.setAccount_id(rs.getInt("account_id"));
+					model.setAdgroup_id(rs.getInt("adgroup_id"));
+					model.setCampaign_id(rs.getInt("campaign_id"));
+					model.setCreative_unit_id(rs.getInt("creative_unit_id"));
+					model.setDisplaytype_id(rs.getShort("displaytype_id"));
+					model.setOs_type(rs.getShort("os_type"));
+					model.setDisplaytype_id(rs.getShort("displaytype_id"));
+					model.setCreative_type(rs.getInt("creative_type"));
+					
+					AdContent adcontent=TargetConverter.ConvertAdContent(rs.getString("ad_content"));
+					model.setAdContent(adcontent);
+					model.setAdContentJson(rs.getString("ad_content"));
+					result.add(model);
+				}
+				catch (Exception e){
+					logger.error("物料同步异常creative_unit_id:" + rs.getString("creative_unit_id"), e);
+				}
+			}
+		} catch (SQLException e) {
+			logger.error("查询数据异常", e);
+		} finally {
+			Database.colseResult(rs);
+			Database.colsePstmt(pstmt);
+			Database.getInstance().closeConnection();
+		}
+		return result;
+	}
+ 
+	public List<Adgroup> getAdGroup(List<Integer> ids) {
+		ResultSet rs = null;
+		PreparedStatement pstmt = null;
+		List<String> idstr = ids.stream().map(i -> i.toString())
+				.collect(Collectors.toList());
+		String p = String.join(",", idstr);
+		String sql = "select c.start_date,c.end_date,c.excludecycle,g.* from ad_adgroup g join ad_campaign c on c.campaign_id=g.campaign_id where g.status=2 and adgroup_id in (" + p
+				+ ")";
+		List<Adgroup> result = new ArrayList<Adgroup>();
+		if(p.equals("")){
+			return result;
+		}
+		try {
+			pstmt = Database.getInstance().getConnection()
+					.prepareStatement(sql);
+			// 对占位符设置值，占位符顺序从1开始，第一个参数是占位符的位置，第二个参数是占位符的值。
+			// pstmt.setString(1, "");
+			rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				try{
+				Adgroup model = new Adgroup();
+				model.setAccount_id(rs.getInt("account_id"));
+				model.setAdgroup_id(rs.getInt("adgroup_id"));
+				model.setCampaign_id(rs.getInt("campaign_id"));
+				model.setAd_objective(rs.getString("ad_objective")); // 作用？
+				model.setBid_price(rs.getBigDecimal("bid_price").multiply(BigDecimal.valueOf(100))); // unit?
+				model.setBid_type(rs.getShort("bid_type")); // 1 cpm 2 cpc
+				model.setBid_way(rs.getShort("bid_way")); // 1 fixed 2 bid
+				model.setBundleid(rs.getString("bundleid")); // ?format
+ 
+				model.setDeal_id(rs.getString("deal_id"));
+				model.setDisplaytype_id(rs.getShort("displaytype_id"));
+				
+				//性别定投
+				model.setTargeting_demographic_gender(
+						TargetConverter.ConvertTargeting_Common("gender",rs.getString("targeting_demographic_gender")));
+				
+				//年龄定投
+				model.setTargeting_demographic_age(
+						TargetConverter.ConvertTargeting_Common("age",rs.getString("targeting_demographic_age")));
+				
+				//收入定投
+				model.setTargeting_demographic_income(
+						TargetConverter.ConvertTargeting_Common("income",rs.getString("targeting_demographic_income")));
+				
+				model.setItunes_appid(rs.getLong("itunes_appid"));
+				model.setMaterial_duration_play(rs
+						.getInt("material_duration_play"));
+				model.setOs_type_id(rs.getShort("os_type_id"));
+				model.setTargeting_adpositions(rs
+						.getString("targeting_adpositions"));
+				model.setTargeting_app_category(rs
+						.getString("targeting_app_category"));
+			 
+				TargetingApp app= TargetConverter.ConverrApp(rs.getString("targeting_apps"));
+				model.setTargetingApps(app);
+				
+				model.setTargeting_brand(rs.getString("targeting_brand"));
+				// model.setTargeting_demographic_age(); 采用艾德DMP标准标签来替代
+				// targeting_tags ??
+				TargetingDevice dev=TargetConverter.ConvertFromJson(rs.getString("targeting_device"),TargetingDevice.class);
+				model.setTargetingDevice(dev);
+				
+				model.setTargeting_flow_type(rs.getShort("targeting_flow_type"));
+				
+				TargetingGeographic geo=TargetConverter.ConvertFromJson(rs
+						.getString("targeting_geographic"),TargetingGeographic.class);
+				formatPoiInfo(geo);
+				model.setTargeting_geographic(geo);
+				
+				model.setTargeting_geographic_type(rs
+						.getString("targeting_geographic_type"));
+				TargetingNetwork net=TargetConverter.ConvertFromJson(rs.getString("targeting_network"),TargetingNetwork.class);
+				model.setTargetingNetwork(net);
+				
+				TargetingOperator operator=TargetConverter.ConvertFromJson(rs.getString("targeting_operator"),TargetingOperator.class);
+				model.setTargetingOperator(operator);
+				
+				model.setTargeting_osversion(rs
+						.getString("targeting_osversion"));
+			
+					 
+					 AdObjective obj=TargetConverter.ConvertFromJson(rs.getString("ad_objective"), AdObjective.class);
+					 model.setAdObjective(obj);
+					 
+		
+					BudgetControl bud = TargetConverter.ConvertBudget(
+							rs.getBigDecimal("daily_budget"),
+							rs.getBigDecimal("total_budget"));
+					model.setDaily_budget(bud);
+					AmountControl amount = TargetConverter.ConvertAmount(
+							rs.getString("imp_control"),
+							rs.getString("imp_total_control"));
+					model.setImp_control(amount);
+					amount = TargetConverter.ConvertAmount(
+							rs.getString("cli_control"),
+							rs.getString("click_total_control"));
+					model.setCli_control(amount);
+					
+					Timestamp start=rs.getTimestamp("start_date");
+					Timestamp end=rs.getTimestamp("end_date");
+					String exclude=rs.getString("excludeCycle");
+				    short type= rs.getShort("speed_launch");
+				    String targethour=rs.getString("targeting_time_interval");
+				    model.setTargeting_time_interval(targethour);
+					SmoothlySpent smoothlySpent=TargetConverter.ConvertSmooth(start, end, exclude, targethour, type);
+					model.setSmoothlySpent(smoothlySpent);
+					String cap = rs.getString("frequencycap");
+					FrequencyControl freq = TargetConverter.ConvertFrequncyCap(cap);
+					model.setFrequencycap(freq);
+					//设备号定向
+					String tag=rs.getString("targeting_tags");				
+					model.setDevice_ids(TargetConverter.ConvertDeviceTargeting(tag));
+					//人群
+					String str=rs.getString("targeting_demographic_package");
+					if(str==null||str.equals("")){
+						TargetingDp tdp = new TargetingDp();
+						tdp.setSet_type("all");
+						tdp.setDirection((short)0);
+						model.setTdp(tdp);
+					}else{
+						TargetingDp tdp=TargetConverter.ConvertFromJson(str,TargetingDp.class);
+						model.setTdp(tdp);
+					}
+					
+					result.add(model);
+				}catch (Exception e){
+					logger.error("物料同步异常adgroup_id:" + rs.getString("adgroup_id"), e);
+				}
+			}
+		} catch (SQLException e) {
+			logger.error("查询数据异常", e);
+		} finally {
+			Database.colseResult(rs);
+			Database.colsePstmt(pstmt);
+			Database.getInstance().closeConnection();
+		}
+		return result;
+	}
+	
+	/**
+	 * 生成坐标信息
+	 * @param geo
+	 */
+	private void formatPoiInfo(TargetingGeographic geo){
+		if(geo.getPoi_value() != null){
+			//半径
+			Double extend = Double.parseDouble(geo.getPoi_value().getGeographic_extend());
+			//经线上纬度每差1度，实际距离大约为111千米
+			//在纬线上经度每差1度，实际距离为111xcos千米
+			Double offsetY = extend / 111;
+			PoiValue poi =  geo.getPoi_value();
+			if(poi != null){
+				for(PoiData data : poi.getPoidata()){
+					//获取纬度
+					Double lat = Double.parseDouble(data.getLocation().getLat());
+					//根据纬度获取x轴偏移量
+					Double offsetX = Math.abs(extend / (111 * Math.cos(Math.toRadians(lat))));
+					data.getLocation().setXb(Double.parseDouble(data.getLocation().getLng()) - offsetX);
+					data.getLocation().setXe(Double.parseDouble(data.getLocation().getLng()) + offsetX);
+					data.getLocation().setYb(Double.parseDouble(data.getLocation().getLat()) - offsetY);
+					data.getLocation().setYe(Double.parseDouble(data.getLocation().getLat()) + offsetY);
+				}	
+			}
+		}
+	}
+ 
+	public List<Campaign> getCampaign(List<Integer> ids) {
+		ResultSet rs = null;
+		PreparedStatement pstmt = null;
+		List<String> idstr = ids.stream().map(i -> i.toString())
+				.collect(Collectors.toList());
+		String p = String.join(",", idstr);
+		String sql = "select * from ad_campaign where status=2 and campaign_id in ("
+				+ p + ")";
+		List<Campaign> result = new ArrayList<Campaign>();
+		if(p.equals("")){
+			return result;
+		}
+		try {
+			pstmt = Database.getInstance().getConnection()
+					.prepareStatement(sql);
+			// 对占位符设置值，占位符顺序从1开始，第一个参数是占位符的位置，第二个参数是占位符的值。
+			// pstmt.setString(1, "");
+			rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				try{
+					Campaign model = new Campaign();
+					model.setAccount_id(rs.getInt("account_id"));
+					model.setCampaign_id(rs.getInt("campaign_id"));
+				 
+					model.setEnd_date(rs.getTimestamp("end_date"));
+					ExcludeCycle ex=TargetConverter.ConvertExcludeCycle(rs.getString("excludecycle"));				
+					model.setExcludeCycle(ex);
+
+					String cap = rs.getString("frequencycap");
+					FrequencyControl freq = TargetConverter.ConvertFrequncyCap(cap);
+					model.setFrequencycap(freq);
+					BudgetControl bud = TargetConverter.ConvertBudget(
+							rs.getBigDecimal("daily_budget_de"),
+							rs.getBigDecimal("total_budget"));
+					model.setDaily_budget_de(bud);
+					AmountControl amount = TargetConverter.ConvertAmount(
+							rs.getString("imp_control"),
+							rs.getString("imp_total_control"));
+					model.setImp_control(amount);
+					amount = TargetConverter.ConvertAmount(
+							rs.getString("cli_control"),
+							rs.getString("click_total_control"));
+					model.setCli_control(amount);
+
+					model.setIs_limit_budget(rs.getShort("is_limit_budget"));
+					model.setIs_speed_launch(rs.getShort("is_speed_launch"));
+					model.setSeat_id(rs.getString("seat_id"));
+					model.setStart_date(rs.getTimestamp("start_date"));
+					model.setPriotiry(rs.getShort("priority"));
+					result.add(model);
+				}
+				catch (Exception e){
+					logger.error("物料同步异常campaign_id:" + rs.getString("campaign_id"), e);
+				}
+			}
+		} catch (SQLException e) {
+			logger.error("查询数据异常", e);
+		} finally {
+			Database.colseResult(rs);
+			Database.colsePstmt(pstmt);
+			Database.getInstance().closeConnection();
+		}
+		return result;
+	}
+	
+	 
+	public List<Account> getAccount(List<Integer> ids) {
+		ResultSet rs = null;
+		PreparedStatement pstmt = null;
+		String sql="select * from ad_account where status=1 ";
+		if(ids!=null && !ids.isEmpty()){
+			List<String> idstr = ids.stream().map(i -> i.toString())
+					.collect(Collectors.toList());
+			String p = String.join(",", idstr);
+			sql=sql+"and account_id in ("+p+")";
+		}
+		List<Account> result = new ArrayList<Account>();
+		try {
+			pstmt = Database.getInstance().getConnection()
+					.prepareStatement(sql);
+			rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				try{
+					Account model = new Account();
+					model.setAccount_id(rs.getInt("account_id"));
+					int amount=(int)(rs.getBigDecimal("amount").floatValue()*100);
+					model.setAmount(amount);
+					
+					if(StringUtils.isNotBlank(rs.getString("blacklist"))){
+						BlackList blacklist = TargetConverter.ConvertFromJson(rs.getString("blacklist"),BlackList.class);
+						model.setBlackList(blacklist);	
+					}
+					result.add(model);	
+				}
+				catch (Exception e){
+					logger.error("物料同步异常account_id:" + rs.getString("account_id"), e);
+				}
+			}
+		} catch (SQLException e) {
+			logger.error("查询数据异常", e);
+		} finally {
+			Database.colseResult(rs);
+			Database.colsePstmt(pstmt);
+			Database.getInstance().closeConnection();
+		}
+		return result;
+	
+	}
+
+	 
+	public List<Integer> getChildID(List<Integer> ids, String childLevel,
+			String parentKeyName, String childKeyName) {
+		ResultSet rs = null;
+		PreparedStatement pstmt = null;
+		List<String> idstr = ids.stream().map(i -> i.toString())
+				.collect(Collectors.toList());
+		String p = String.join(",", idstr);
+		String sql = "select * from " + childLevel + " where " + parentKeyName
+				+ " in (" + p + ")";
+		List<Integer> result = new ArrayList<Integer>();
+		if(p.equals("")){
+			return result;
+		}
+		try {
+			pstmt = Database.getInstance().getConnection()
+					.prepareStatement(sql);
+			rs = pstmt.executeQuery();
+			while (rs.next()) {
+				result.add(rs.getInt(childKeyName));
+			}
+		} catch (SQLException e) {
+			logger.error("查询数据异常", e);
+		} finally {
+			Database.colseResult(rs);
+			Database.colsePstmt(pstmt);
+			Database.getInstance().closeConnection();
+		}
+		return result;
+	}
+
+}

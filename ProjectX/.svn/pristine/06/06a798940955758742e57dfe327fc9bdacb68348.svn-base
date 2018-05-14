@@ -1,0 +1,8 @@
+package com.yaDsp.connect;
+
+public class PriceDecryptorFactory {
+	
+	public static PriceDecryptor Get(String sspid) {
+		return null;
+	}
+}

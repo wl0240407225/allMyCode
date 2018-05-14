@@ -1,0 +1,53 @@
+package com.yaDsp.strategy.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.model.standard.request.BidRequest;
+import com.yaDsp.strategy.PriorityStrategy;
+ 
+ 
+public class ImpBalanceStrategy   implements PriorityStrategy {
+
+	 
+	AmountManager am=new AmountManager();
+	
+	@Override
+	public List<Ad> execute(BidRequest request, List<Ad> ads) {
+		List<Ad> result=new ArrayList<Ad>();
+		if(ads != null && ads.size() > 1)
+		{
+			List<Ad> newAds = ads.stream().filter(x->x.adgroup.getDaily_budget().TotalBudget > 0 ).collect(Collectors.toList());
+			if(newAds.size() > 0)		
+			{
+				Ad ad = newAds.stream().min((x,y)->
+				{
+					int xImp = am.getAdgroupTotalImp(x.adgroupId);
+					int yImp = am.getAdgroupTotalImp(y.adgroupId);
+					int xBudget = x.adgroup.getDaily_budget().TotalBudget;
+					int yBudget = y.adgroup.getDaily_budget().TotalBudget; 
+					double value = (xImp * 1.0/xBudget)-(yImp*1.0/yBudget);
+					if(value == 0.0){
+						return 0;
+					}else{
+						return value > 0 ? 1: -1;
+					}
+				}).get();
+				result.add(ad);
+				return result;
+			} 
+		}
+		return ads;		 
+	}
+
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return "ImpBalance";
+	}
+
+	
+
+}

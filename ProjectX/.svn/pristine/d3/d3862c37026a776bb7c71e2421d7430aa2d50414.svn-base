@@ -1,0 +1,76 @@
+package com.yaDsp.model.zplay.request;
+
+public class ZpDeviceExt {
+    private String plmn;
+    private String imei;
+    private String imsi;
+    private String idfv;
+    private String mac;
+    private String android_id;
+    private String adid;
+    private String orientation;
+
+    public String getPlmn() {
+        return plmn;
+    }
+
+    public void setPlmn(String plmn) {
+        this.plmn = plmn;
+    }
+
+    public String getImei() {
+        return imei;
+    }
+
+    public void setImei(String imei) {
+        this.imei = imei;
+    }
+
+    public String getImsi() {
+        return imsi;
+    }
+
+    public void setImsi(String imsi) {
+        this.imsi = imsi;
+    }
+
+    public String getIdfv() {
+        return idfv;
+    }
+
+    public void setIdfv(String idfv) {
+        this.idfv = idfv;
+    }
+
+    public String getMac() {
+        return mac;
+    }
+
+    public void setMac(String mac) {
+        this.mac = mac;
+    }
+
+    public String getAndroid_id() {
+        return android_id;
+    }
+
+    public void setAndroid_id(String android_id) {
+        this.android_id = android_id;
+    }
+
+    public String getAdid() {
+        return adid;
+    }
+
+    public void setAdid(String adid) {
+        this.adid = adid;
+    }
+
+    public String getOrientation() {
+        return orientation;
+    }
+
+    public void setOrientation(String orientation) {
+        this.orientation = orientation;
+    }
+}

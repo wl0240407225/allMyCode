@@ -1,0 +1,135 @@
+package com.yaDsp.model.zplay.response;
+
+import com.alibaba.fastjson.annotation.JSONField;
+
+import java.util.List;
+
+public class ZpBid {
+    private String id;
+    private String impid;
+    private double price;
+    private String adid;
+    private String nurl;
+    private String bundle;
+    private String iurl;
+    //private int w;
+    //private int h;
+    private List<String> cat;
+    private ZpBidExt ext;
+    private String adm;
+    private ZpAdmOneof admOneof;
+    private String dealid;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getImpid() {
+        return impid;
+    }
+
+    public void setImpid(String impid) {
+        this.impid = impid;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public String getAdid() {
+        return adid;
+    }
+
+    public void setAdid(String adid) {
+        this.adid = adid;
+    }
+
+    @JSONField(name="AdmOneof")
+    public ZpAdmOneof getAdmOneof() {
+        return admOneof;
+    }
+
+    public void setAdmOneof(ZpAdmOneof admOneof) {
+        this.admOneof = admOneof;
+    }
+
+    public String getDealid() {
+        return dealid;
+    }
+
+    public void setDealid(String dealid) {
+        this.dealid = dealid;
+    }
+
+    public String getNurl() {
+        return nurl;
+    }
+
+    public void setNurl(String nurl) {
+        this.nurl = nurl;
+    }
+
+    public String getBundle() {
+        return bundle;
+    }
+
+    public void setBundle(String bundle) {
+        this.bundle = bundle;
+    }
+
+    public String getIurl() {
+        return iurl;
+    }
+
+    public void setIurl(String iurl) {
+        this.iurl = iurl;
+    }
+
+//    public int getW() {
+//        return w;
+//    }
+//
+//    public void setW(int w) {
+//        this.w = w;
+//    }
+//
+//    public int getH() {
+//        return h;
+//    }
+//
+//    public void setH(int h) {
+//        this.h = h;
+//    }
+
+    public List<String> getCat() {
+        return cat;
+    }
+
+    public void setCat(List<String> cat) {
+        this.cat = cat;
+    }
+
+    public ZpBidExt getExt() {
+        return ext;
+    }
+
+    public void setExt(ZpBidExt ext) {
+        this.ext = ext;
+    }
+
+    public String getAdm() {
+        return adm;
+    }
+
+    public void setAdm(String adm) {
+        this.adm = adm;
+    }
+}

@@ -1,0 +1,25 @@
+#redis\u914d\u7f6e,\u8be5\u6587\u4ef6\u6682\u65f6\u4e0d\u7528
+#host_read
+redis.readHost=172.200.2.4
+#host_write
+redis.writeHost=192.168.60.71
+#\u7aef\u53e3
+redis.port=6379
+#password
+redis.password=onedesk
+#database
+redis.database=0
+#\u8d85\u65f6
+redis.timeout=1000
+#\u6700\u5927\u95f2\u7f6e
+redis.maxIdle=100
+#\u6700\u5c0f\u95f2\u7f6e
+redis.minIdle=10
+#\u6700\u5927\u8fde\u63a5\u6570
+redis.maxTotal=100
+#\u83b7\u53d6\u8fde\u63a5(borrow(\u5f15\u5165)\u4e00\u4e2ajedis\u5b9e\u4f8b)\u65f6\u7684\u6700\u5927\u7b49\u5f85\u6beb\u79d2\u6570
+redis.maxWaitMillis=1000
+#tags redis info
+redis.tags.host=172.16.60.67
+redis.tags.port=8901
+redis.tags.password=WgcU4x2tL1

@@ -1,0 +1,165 @@
+package com.yaDsp.material;
+import com.yaDsp.material.model.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+ 
+ 
+public class AdSyncService {
+	public static AdSyncResult syncAccount(List<Integer> id,
+			boolean includeChild) {
+		AdSyncResult result = new AdSyncResult();
+		result.isSuccess=true;
+		List<Account> accounts=dao.getAccount(id);
+		
+		if(id==null || id.size()==0)
+			id=new ArrayList<Integer>(accountService.getAllAccount().keySet());
+		
+		accountService.updateAccount(accounts);
+		result.affectedAccount=accounts.stream().map(c->c.getAccount_id()).collect(Collectors.toList());
+		
+		if(includeChild){
+			List<Integer> campaigns = dao.getChildID(result.affectedAccount, "ad_campaign",
+					"account_id", "campaign_id");
+ 
+			AdSyncResult child=syncCampaign(campaigns,true);
+			child.affectedAccount=result.affectedAccount;
+			result=child;
+		}
+		
+	
+		id=new ArrayList<Integer>(id);
+		id.removeAll(result.affectedAccount);
+		accountService.deleteAccount(id);
+
+		return result;
+	}
+
+	public static AdSyncResult syncCampaign(List<Integer> id,
+			boolean includeChild) {
+		AdSyncResult result = new AdSyncResult();
+
+		List<Campaign> campaigns = dao.getCampaign(id);
+		campaignService.updateCampaign(campaigns);
+		result.isSuccess = true;
+		result.affectedCampaign = campaigns.stream()
+				.map(c -> c.getCampaign_id()).collect(Collectors.toList());
+
+
+		
+		if (includeChild) {
+			List<Integer> groups = dao.getChildID(id, "ad_adgroup",
+					"campaign_id", "adgroup_id");
+ 
+			AdSyncResult child=syncAdGroup(groups, true);
+		   child.affectedCampaign=result.affectedCampaign;
+		   result=child;
+ 
+		}
+		id=new ArrayList<Integer>(id);
+		id.removeAll(result.affectedCampaign);
+		campaignService.deleteCampaign(id);
+
+		return result;
+	}
+
+	public static AdSyncResult syncAdGroup(List<Integer> id,
+			boolean includeChild) {
+		AdSyncResult result = new AdSyncResult();
+
+		List<Adgroup> groups = dao.getAdGroup(id);
+		adgroupService.updateAdgroup(groups);
+		result.isSuccess = true;
+		result.affectedAdGroup = groups.stream().map(c -> c.getAdgroup_id())
+				.collect(Collectors.toList());
+		if (includeChild) {
+
+			List<Integer> units = dao.getChildID(id, "ad_creative_unit",
+					"adgroup_id", "creative_unit_id");
+ 
+		 
+			AdSyncResult child=syncCreativeUnit(units, true);
+					 
+			child.affectedAdGroup=result.affectedAdGroup;
+			result=child;
+		}
+ 
+		id=new ArrayList<Integer>(id);
+
+		id.removeAll(result.affectedAdGroup);
+		adgroupService.deleteAdgroup(id);
+
+		return result;
+	}
+
+	public static AdSyncResult syncCreativeUnit(List<Integer> id,
+			boolean includeChild) {
+		AdSyncResult result = new AdSyncResult();
+
+		List<CreativeUnit> units = dao.getCreativeUnit(id);
+		unitService.updateCreativeUnit(units);
+		result.isSuccess = true;
+		result.affectedCreativeUnit = units.stream()
+				.map(c -> c.getCreative_unit_id()).collect(Collectors.toList());
+		if (includeChild) {
+			List<Integer> ads = dao.getChildID(id, "ad_creative",
+					"creative_unit_id", "creative_id");
+			result.setAffectedCreative(syncCreative(ads).getAffectedCreative());
+		}
+
+		id=new ArrayList<Integer>(id);
+		id.removeAll(result.affectedCreativeUnit);
+		unitService.deleteCreativeUnit(id);
+		id=new ArrayList<Integer>(id);
+		return result;
+	}
+
+	public static AdSyncResult syncCreative(List<Integer> id) {
+		AdSyncResult result = new AdSyncResult();
+		List<Creative> ads = dao.getAds(id);
+		creativeService.updateCreative(ads);
+		result.isSuccess = true;
+		result.affectedCreative = ads.stream().map(c -> c.getCreative_id())
+				.collect(Collectors.toList());
+		id=new ArrayList<Integer>(id);
+		id.removeAll(result.affectedCreative);
+		creativeService.deleteCreative(id);
+		return result;
+	}
+
+	public static Object getMaterial(String level, int id) {
+		switch (level) {
+		case "account":
+			if(id<0)
+				return accountService.getAllAccount();
+			return accountService.getAccount(Arrays.asList(id));
+		case "campaign":
+			if (id < 0)
+				return campaignService.getAllCampaign();
+			return campaignService.getCampaign(Arrays.asList(id));
+		case "adgroup":
+			if (id < 0)
+				return adgroupService.getAllAdgroup();
+			return adgroupService.getAdgroup(Arrays.asList(id));
+		case "creative_unit":
+			if (id < 0)
+				return unitService.getAllCreativeUnit();
+			return unitService.getCreativeUnit(Arrays.asList(id));
+		case "creative":
+			if (id < 0)
+				return creativeService.getAllCreative();
+			return creativeService.getCreative(Arrays.asList(id));
+		default:
+			return "Error parameter";
+		}
+	}
+
+	static MaterialReader dao = new MaterialReader();
+	static AccountServiceImpl accountService=new AccountServiceImpl();
+	static CampaignServiceImpl campaignService = new CampaignServiceImpl();
+	static AdgroupServiceImpl adgroupService = new AdgroupServiceImpl();
+	static CreativeUnitServiceImpl unitService = new CreativeUnitServiceImpl();
+	static CreativeServiceImpl creativeService = new CreativeServiceImpl();
+
+}

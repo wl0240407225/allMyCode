@@ -1,0 +1,28 @@
+package com.yaDsp.model.standard.response;
+
+import javafx.beans.binding.ObjectExpression;
+
+import java.util.List;
+
+public class AdmNative {
+    private List<Object> assets;
+    private NativeLink link;
+    //使用ZpBidExt中的imptrackers
+    //private List<String> imptrackers;
+
+    public List<Object> getAssets() {
+        return assets;
+    }
+
+    public void setAssets(List<Object> assets) {
+        this.assets = assets;
+    }
+
+    public NativeLink getLink() {
+        return link;
+    }
+
+    public void setLink(NativeLink link) {
+        this.link = link;
+    }
+}

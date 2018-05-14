@@ -1,0 +1,132 @@
+package com.yaDsp.material.model;
+
+public class CreativeUnit {
+	
+	int creative_unit_id;
+
+	int account_id;
+
+	int campaign_id;
+
+	int adgroup_id;
+
+	/**
+	 * 创意单元类型
+	 */
+	int creative_type;
+
+	/**
+	 * 展示类型
+	 */
+	short displaytype_id;
+
+	/**
+	 * 广告内容  新字段
+	 */
+	AdContent adContent;
+	/**
+	 * 广告内容,json形式
+	 */
+	String adContentJson;
+	public String getAdContentJson() {
+		return adContentJson;
+	}
+
+	public void setAdContentJson(String adContentJson) {
+		this.adContentJson = adContentJson;
+	}
+
+	/**
+	 * 操作系统（0：IOS，1：Android，2：Windows）
+	 */
+	short os_type;
+
+	short status;
+
+	/**
+	 * 被复制的创意单元id，只有复制时才用到
+	 */
+	int copy_from;
+
+	public AdContent getAdContent() {
+		return adContent;
+	}
+
+	public void setAdContent(AdContent adContent) {
+		this.adContent = adContent;
+	}
+	
+	public int getCreative_unit_id() {
+		return creative_unit_id;
+	}
+
+	public void setCreative_unit_id(int creative_unit_id) {
+		this.creative_unit_id = creative_unit_id;
+	}
+
+	public int getAccount_id() {
+		return account_id;
+	}
+
+	public void setAccount_id(int account_id) {
+		this.account_id = account_id;
+	}
+
+	public int getCampaign_id() {
+		return campaign_id;
+	}
+
+	public void setCampaign_id(int campaign_id) {
+		this.campaign_id = campaign_id;
+	}
+
+	public int getAdgroup_id() {
+		return adgroup_id;
+	}
+
+	public void setAdgroup_id(int adgroup_id) {
+		this.adgroup_id = adgroup_id;
+	}
+
+	public int getCreative_type() {
+		return creative_type;
+	}
+
+	public void setCreative_type(int creative_type) {
+		this.creative_type = creative_type;
+	}
+
+	public short getDisplaytype_id() {
+		return displaytype_id;
+	}
+
+	public void setDisplaytype_id(short displaytype_id) {
+		this.displaytype_id = displaytype_id;
+	}
+
+	public short getOs_type() {
+		return os_type;
+	}
+
+	public void setOs_type(short os_type) {
+		this.os_type = os_type;
+	}
+
+	public short getStatus() {
+		return status;
+	}
+
+	public void setStatus(short status) {
+		this.status = status;
+	}
+
+	public int getCopy_from() {
+		return copy_from;
+	}
+
+	public void setCopy_from(int copy_from) {
+		this.copy_from = copy_from;
+	}
+
+	
+}

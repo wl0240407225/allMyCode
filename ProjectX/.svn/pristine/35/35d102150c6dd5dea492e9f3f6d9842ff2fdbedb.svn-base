@@ -1,0 +1,6 @@
+package com.yaDsp.trc;
+
+public interface TrcEventListener {
+	void handle(TrcModel model);
+
+}

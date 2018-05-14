@@ -1,0 +1,44 @@
+package com.yaDsp.material.model;
+
+import java.util.List;
+
+public class Channel {
+
+	String id;
+	String name;
+	String pid;
+	String mapping_id;
+	List<Content> contents;
+	
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getPid() {
+		return pid;
+	}
+	public void setPid(String pid) {
+		this.pid = pid;
+	}
+	public String getMapping_id() {
+		return mapping_id;
+	}
+	public void setMapping_id(String mapping_id) {
+		this.mapping_id = mapping_id;
+	}
+	public List<Content> getContents() {
+		return contents;
+	}
+	public void setContents(List<Content> contents) {
+		this.contents = contents;
+	}
+	
+}

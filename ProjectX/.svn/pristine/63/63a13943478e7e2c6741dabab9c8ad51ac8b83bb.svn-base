@@ -1,0 +1,10 @@
+package com.yaDsp.strategy;
+
+import java.util.List;
+ 
+
+public interface StrategyConfigProvider {
+	List<GroupStrategyConfig> getGroupStrategyConfig();
+
+}
+

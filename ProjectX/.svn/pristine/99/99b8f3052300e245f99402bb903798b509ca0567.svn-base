@@ -1,0 +1,15 @@
+package com.yaDsp.model.zplay.request;
+
+import java.util.List;
+
+public class ZpUserData {
+    private List<ZpSegment> segment;
+
+    public List<ZpSegment> getSegment() {
+        return segment;
+    }
+
+    public void setSegment(List<ZpSegment> segment) {
+        this.segment = segment;
+    }
+}

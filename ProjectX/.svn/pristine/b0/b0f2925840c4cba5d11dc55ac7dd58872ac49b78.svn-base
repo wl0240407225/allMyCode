@@ -1,0 +1,21 @@
+package com.yaDsp.model.zplay.response;
+
+public enum ZpNoBidReason {
+    //0：未知错误
+    UNKNOWN_ERROR,
+    //1：技术错误
+    TECHNICAL_ERROR,
+    //2：无效请求
+    INVALID_REQUEST,
+    KNOWN_WEB_SPIDER,
+    //4：可疑的伪造流量
+    SUSPECTED_NONHUMAN_TRAFFIC,
+    //5：数据中心代理服务器ip
+    CLOUD_DATACENTER_PROXYIP,
+    //6：不支持设备
+    UNSUPPORTED_DEVICE,
+    //7：被屏蔽媒体
+    BLOCKED_PUBLISHER,
+    //8：不匹配的用户
+    UNMATCHED_USER
+}

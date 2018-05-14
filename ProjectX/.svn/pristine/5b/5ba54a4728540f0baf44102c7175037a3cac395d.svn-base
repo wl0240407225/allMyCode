@@ -1,0 +1,5 @@
+package com.yaDsp.strategy;
+
+public interface FilterStrategy extends Strategy {
+
+}

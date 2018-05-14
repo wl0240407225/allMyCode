@@ -1,0 +1,94 @@
+package com.yaDsp.strategy.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+ 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.material.model.AmountControl;
+import com.yaDsp.model.standard.request.BidRequest;
+import com.yaDsp.strategy.FilterStrategy;
+import com.yaDsp.util.DateFormatterUtil;
+ 
+ 
+public class ClickControlStrategy   implements FilterStrategy {
+
+	 
+	AmountManager am;
+	
+	private static Logger logger = LoggerFactory.getLogger(ClickControlStrategy.class);
+	
+	
+	@Override
+	public List<Ad> execute(BidRequest request, List<Ad> ads) {
+		List<Ad> result = new ArrayList<Ad>();
+		
+		try{
+			if(ads != null && ads.size() > 0)
+			{
+				for (Ad ad : ads) {
+					boolean isOutofClickAmount = false;
+					int day = DateFormatterUtil.getDate();
+					
+					if(ad.adgroup.getCli_control()!= null)
+					{
+						AmountControl ac = ad.adgroup.getCli_control() ;
+						if(ac.ControlType == 1){
+							int count = am.getAdgroupDayClick(day, ad.adgroupId);
+							isOutofClickAmount = count == -1 || count  >= ac.getDailyAmount();
+						}else if(ac.ControlType == 2){
+							int count = am.getAdgroupTotalClick(ad.adgroupId);
+							isOutofClickAmount = count == -1 || count  >= ac.TotalAmount ;
+						}else if(ac.ControlType == 3){
+							int count = am.getAdgroupDayClick(day, ad.adgroupId);
+							int count2 = am.getAdgroupTotalClick(ad.adgroupId);
+							isOutofClickAmount = count == -1 || count >= ac.getDailyAmount() ||
+												 count2 == -1 || count2 >= ac.TotalAmount ;
+						}
+						if(isOutofClickAmount) 
+							continue;
+					}
+					
+					if(ad.campaign.getCli_control() != null){
+						AmountControl ac = ad.campaign.getCli_control() ;
+						if (ac.ControlType == 1) {
+							int count = am.getCamDayClick(day, ad.campiagnId);
+							isOutofClickAmount = count == -1 || count   >= ac.getDailyAmount(); 
+						}else if(ac.ControlType == 2){
+							int count = am.getCamTotalClick(ad.campiagnId);
+							isOutofClickAmount = count == -1 || count  >= ac.TotalAmount;
+						}else if(ac.ControlType == 3) {
+							int count = am.getCamDayClick(day, ad.campiagnId);
+							int count2 = am.getCamTotalClick(ad.campiagnId);
+							isOutofClickAmount = count == -1 || count   >= ac.getDailyAmount() ||
+												 count2 == -1 || count2 >= ac.TotalAmount; 
+							
+						}
+						if(isOutofClickAmount) 
+							continue;
+					}
+					result.add(ad);
+				}	
+			}
+			return result;
+		}
+		catch(Exception e)
+		{
+			logger.debug("ClickControlError"+e.getMessage());
+			return result;
+		}
+		
+	}
+
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return "ClickAmountControl";
+	}
+
+	 
+
+}

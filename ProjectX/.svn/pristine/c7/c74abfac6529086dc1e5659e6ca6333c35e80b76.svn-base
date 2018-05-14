@@ -1,0 +1,20 @@
+package com.yaDsp.model.standard.request;
+
+public class User {
+
+	private String userid;
+	public String getUserId() {
+		return userid;
+	}
+	public void setUserId(String userid) {
+		this.userid = userid;
+	}
+	public String getSex() {
+		return sex;
+	}
+	public void setSex(String sex) {
+		this.sex = sex;
+	}
+	private String sex;
+	
+}

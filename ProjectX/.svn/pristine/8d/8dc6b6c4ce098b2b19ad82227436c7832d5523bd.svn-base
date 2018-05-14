@@ -1,0 +1,60 @@
+package com.yaDsp.trc.listener;
+
+import java.util.Date;
+
+import com.yaDsp.connect.*;
+import com.yaDsp.logger.LogSystem;
+import com.yaDsp.trc.TrcEventListener;
+import com.yaDsp.trc.TrcModel;
+
+public class LogTrcListener implements TrcEventListener {
+
+	@Override
+	public void handle(TrcModel model) {
+		if (model.getAct().equals("click")) {
+			Object[] item = new Object[] {
+					new Date(), // 当前时间
+					model.getRealIP(), // 0:real ip
+					model.getId(), // 1:广告token,dsp生成
+					model.getDeviceId(), // 2:userId
+					model.getSlottoken(), // 3:slottoken(广告位唯一标识),三方请求提供
+					"_bid_type", // 4:竞价类型
+					"_uid_type", // 5:uidType
+					model.getSspId(), // 6:ssp id
+					model.getAppId(), // 7:appId
+					model.getCreativeId(), // 8:创意Id
+					model.getAdgroupId(), // 9:组Id
+					model.getCampaignId(), // 10:活动Id
+					model.getIP() // 11:用户IP
+			};
+			LogSystem.writeLog("click", item);
+		} else if (model.getAct().equals("imp")) {
+
+			 
+//			Object price = model.getBidPrice();
+//			PriceDecryptor dec = PriceDecryptorFactory.Get(model.getSspId());
+//			if (dec != null) {
+//				price = dec.Decrypt(model.getBidPrice());
+//				model.setDecryptedPrice((int)price);
+//			}
+
+			Object[] item = new Object[] {
+					new Date(), // 0:当前时间
+					model.getId(), // 1:请求Id
+					model.getCreativeId(), // 2:创意id
+					model.getAdgroupId(), // 3:广告组id
+					model.getCampaignId(), // 4:广告活动id
+					model.getDecryptedPrice(), // 5:adx与ssp成交价格
+					model.getDeviceId(), // 6:设备id
+					model.getSspId(), // 7:ssp id
+					"_uid_type", // 8:userid
+					model.getBidPrice(), // 9: adx对ssp的出价
+					model.getId(), // 9:dsp生成的token
+					model.getIP(), // 用户设备IP
+					model.getRealIP() // 用户真实IP
+
+			};
+			LogSystem.writeLog("imp", item);
+		}
+	}
+}

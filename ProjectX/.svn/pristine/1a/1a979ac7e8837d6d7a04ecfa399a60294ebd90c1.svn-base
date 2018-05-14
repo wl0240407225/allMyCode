@@ -1,0 +1,222 @@
+package com.yaDsp.engine.selector;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import com.yaDsp.model.standard.request.*;
+import javafx.beans.binding.ObjectExpression;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.material.*;
+import com.yaDsp.material.model.*;
+import com.yaDsp.util.ListUtil;
+
+public class CreativeFilter {
+
+	private static Logger logger = LoggerFactory.getLogger(CreativeFilter.class);
+
+	// private static boolean isDebugEnabled = logger.isDebugEnabled();
+
+	public static List<Creative> iterateFilter(BidRequest request, List<Integer> creativeUnitIds) {
+		List<Creative> result = new ArrayList<Creative>();
+
+		if (creativeUnitIds.size() == 0) {
+			return result;
+		}
+		boolean isDebug = request.isDebug();
+		List<Integer> fiteredCreativeIds = new ArrayList<Integer>();
+
+		CreativeServiceImpl creativeService = new CreativeServiceImpl();
+
+		// 根据creativeUnitIds，获取对应的creativeIdList
+		List<Integer> creativeIds = getFilteredCreativeIds(creativeService, creativeUnitIds, isDebug);
+
+		if (isDebug) {
+			logger.debug("筛选前 creativeId:" + ListUtil.intListToString(creativeIds));
+		}
+
+		HashMap<Integer, Creative> creativeTable = creativeService.getCreative(creativeIds);
+
+		creativeTable.forEach((creativeId, creative) -> {
+			if (judgeNativeWidthHeight(request, creative, isDebug)
+					&&judgeNativeImageType(request, creative, isDebug)) {
+				result.add(creative);
+				fiteredCreativeIds.add(creative.getCreative_id());
+			}
+		});
+
+		if (isDebug) {
+			logger.debug("筛选后 creativeId:" + ListUtil.intListToString(fiteredCreativeIds));
+		}
+
+		return result;
+	}
+
+	/**
+	 * 根据creativeUnitIds，获取对应的creativeIdList
+	 * 
+	 * @param creativeService
+	 * @param creativeUnitIds
+	 * @return
+	 */
+	private static List<Integer> getFilteredCreativeIds(CreativeServiceImpl creativeService,
+			List<Integer> creativeUnitIds, boolean isDebug) {
+		List<Integer> result = new ArrayList<Integer>();
+
+		HashMap<Integer, List<Integer>> mappingIdTable = creativeService.getMappingIdTable();
+
+		mappingIdTable.forEach((creativeUnitId, creativeIds) -> {
+			if (creativeUnitIds.contains(creativeUnitId)) {
+				result.addAll(creativeIds);
+
+				if (isDebug) {
+					logger.debug(String.format("creativeUnitId(creativeId): %d(%s)", creativeUnitId,
+							ListUtil.intListToString(creativeIds)));
+				}
+			}
+		});
+
+		return result;
+	}
+
+	private static boolean judgeWidthHeight(BidRequest request, Creative creative, boolean isDebug) {
+		// 汽车之家不做图片尺寸判断
+		// if(request.getSspId().equals("103")){
+		// return true;
+		// }
+
+		boolean result = false;
+
+		Banner banner = request.getImp().get(0).getBanner();
+		
+		if(banner==null) {
+			return true;
+		}
+
+		if (banner.getH() == creative.getHeight() && banner.getW() == creative.getWidth()) {
+			result = true;
+		}
+
+		if (!result && isDebug) {
+			logger.debug(String.format("宽高 creativeId:%d\tDB.h:%d\tDB.w:%d\trequest.h:%d\trequest.w:%d",
+					creative.getCreative_id(), creative.getHeight(), creative.getWidth(), banner.getH(),
+					banner.getW()));
+		}
+
+		return result;
+	}
+
+	private static boolean judgeNativeWidthHeight(BidRequest request, Creative creative, boolean isDebug) {
+		boolean result = false;
+
+		ReqNative reqNative = request.getImp().get(0).getNativeRequest();
+
+		if(reqNative==null) {
+			return true;
+		}
+
+		List<ReqNativeAsset> assets = reqNative.getAssets();
+
+		for(ReqNativeAsset asset : assets)
+		{
+			HashMap<String,HashMap<String,Integer>> assetOneof = asset.getAssetOneof();
+
+			if(assetOneof.containsKey("Img")){
+				HashMap<String,Integer> assetImage = assetOneof.get("Img");
+				if (assetImage.get("h") == creative.getHeight()
+						&& assetImage.get("w") == creative.getWidth()) {
+					result = true;
+				}
+
+				if (!result && isDebug) {
+					logger.debug(String.format("宽高 creativeId:%d\tDB.h:%d\tDB.w:%d\trequest.h:%d\trequest.w:%d",
+							creative.getCreative_id(), creative.getHeight(), creative.getWidth(),
+							assetImage.get("h"), assetImage.get("w")));
+				}
+			}
+		}
+
+		return result;
+	}
+
+	private static boolean judgeNativeImageType(BidRequest request, Creative creative, boolean isDebug) {
+
+		boolean result = false;
+
+		ReqNative nativeRequest = request.getImp().get(0).getNativeRequest();
+
+		List<ReqNativeAsset> assets = nativeRequest.getAssets();
+
+		int reqNativeImageCount = 0;
+
+		for(ReqNativeAsset asset : assets) {
+
+			if (!asset.isRequired()) {
+				//如果不是必须项，则忽略
+				continue;
+			}
+
+			HashMap<String,HashMap<String,Integer>> assetOneof = asset.getAssetOneof();
+
+			if (assetOneof.containsKey("Img")) {
+				reqNativeImageCount++;
+			}
+		}
+
+
+		if ("singlezoom".equals(creative.getUp_type())
+				&& reqNativeImageCount == 1) {
+			result = true;
+		}
+
+		if (!result && isDebug) {
+			logger.debug("物料原生图片数量要求："+creative.getUp_type());
+			logger.debug("Adx原生广告图片数量要求："+ reqNativeImageCount);
+		}
+		return result;
+
+	}
+
+	private static boolean judgeImageType(BidRequest request, Creative creative, boolean isDebug) {
+		return true;
+		/*
+		 * boolean result = true; List<Banner> banner = request.getImp().getBanner(); if
+		 * (banner.size() > 0){ Integer imgType = banner.get(0).getImgType(); /**
+		 * imgType 0 纯文本 1一图 2 二图 3 组图
+		 *
+		 * if(creative.getImg_type() != imgType){ result = false; } } if (!result &&
+		 * isDebug) { logger.debug(String.
+		 * format("imagetype creativeId:%d\t DB.imagetype:%d\t request.imagetype:%d",
+		 * creative.getCreative_id(), creative.getImg_type(),
+		 * banner.get(0).getImgType())); } return result;
+		 */
+	}
+
+	private static boolean judgeTemplate(BidRequest request, Creative creative, boolean isDebug) {
+		
+		Native nat=request.getImp().get(0).getNativeObject();
+		if(nat!=null) {
+			if(nat.getTemplateID()!=null) {
+				return nat.getTemplateID().equals(creative.getSsp_template_id());
+			}
+		}
+		return true;
+		/*
+		 * boolean result = true; 汽车之家需要做此判断 Hashtable<String,Integer>
+		 * third_creative_id = null; if(request.getSsp_id()().equals("103")){ Integer
+		 * sspid=Integer.parseInt(request.getSspId()); String slotToken =
+		 * request.getApp().getSlotToken(); if(!slotToken.equals("")){ result = false;
+		 * if(creative.getThird_creative() != null){ third_creative_id =
+		 * creative.getThird_creative().get(sspid); if(third_creative_id != null &&
+		 * third_creative_id.keySet().contains(slotToken)){ result = true; } } } } if
+		 * (!result && isDebug) { String template = ""; if(third_creative_id != null){
+		 * template = third_creative_id.keySet().toString(); } logger.debug(String.
+		 * format("slotToken creativeId:%d\t DB.slotToken:%s\t request.slotToken:%s",
+		 * creative.getCreative_id(), template, request.getApp().getSlotToken())); }
+		 * 
+		 * return result;
+		 */
+	}
+}

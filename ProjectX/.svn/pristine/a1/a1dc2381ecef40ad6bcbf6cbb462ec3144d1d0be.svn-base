@@ -1,0 +1,33 @@
+package com.yaDsp.model.zplay.request;
+
+import java.util.List;
+
+public class ZpImpExt {
+    private boolean is_splash_screen;
+    private List<Integer> inventory_types;
+    private int ad_type;
+
+    public boolean isIs_splash_screen() {
+        return is_splash_screen;
+    }
+
+    public void setIs_splash_screen(boolean is_splash_screen) {
+        this.is_splash_screen = is_splash_screen;
+    }
+
+    public List<Integer> getInventory_types() {
+        return inventory_types;
+    }
+
+    public void setInventory_types(List<Integer> inventory_types) {
+        this.inventory_types = inventory_types;
+    }
+
+    public int getAd_type() {
+        return ad_type;
+    }
+
+    public void setAd_type(int ad_type) {
+        this.ad_type = ad_type;
+    }
+}

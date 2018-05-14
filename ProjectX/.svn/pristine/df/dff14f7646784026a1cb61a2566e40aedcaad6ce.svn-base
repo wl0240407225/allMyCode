@@ -1,0 +1,327 @@
+package com.yaDsp.material.model;
+
+import java.util.Date;
+import java.util.Hashtable;
+
+public class Creative {
+	/**  
+	 * 
+	 */
+	int creative_id;
+
+	/**  
+	 * 
+	 */
+	int account_id;
+
+	/**  
+	 * 
+	 */
+	int campaign_id;
+
+	/**  
+	 * 
+	 */
+	int adgroup_id;
+
+	/**  
+	 * 
+	 */
+	int creative_unit_id;
+
+	/**
+	 * 创意单元类型
+	 */
+	short creative_type;
+
+	/**
+	 * 展示类型
+	 */
+	short displaytype_id;
+
+	/**
+	 * 模版id
+	 */
+	int template_id;
+
+	/**
+	 * 提交时间（创意状态重新变成待审核时，才修改。只有审核平台使用）
+	 */
+	Date submit_date;
+
+	/**
+	 * 审核失败原因
+	 */
+	String audit_reasons;
+
+	/**
+	 * 审核时间
+	 */
+	Date audit_date;
+
+	/**
+	 * 第三方审核结果
+	 */
+	String third_audit;
+
+	/**  
+	 * 
+	 */
+	int size_id;
+
+	/**  
+	 * 
+	 */
+	short width;
+
+	/**  
+	 * 
+	 */
+	short height;
+
+	/**  
+	 * 
+	 */
+	String shrink_expand;
+
+	/**  
+	 * 
+	 */
+	String img_url;
+	/**
+	 * 
+	 */
+	int img_type;
+
+	/**  
+	 * 
+	 */
+	short status;
+
+	/**
+	 * 被复制的创意id，只有复制时才用到
+	 */
+	int copy_from;
+
+	/**  
+	 * 
+	 */
+	String info;
+
+	/**
+	 * autozoom是自动向下生成图片,nozoom是单张上传
+	 */
+	String up_type;
+	
+	String ssp_template_id;
+	
+	
+	public String getSsp_template_id() {
+		return ssp_template_id;
+	}
+
+	public void setSsp_template_id(String ssp_template_id) {
+		this.ssp_template_id = ssp_template_id;
+	}
+
+	/**
+	 * key:sspid
+	 * value:三方创意ID
+	 */
+//	Hashtable<Integer,Integer> third_creative=new Hashtable<Integer,Integer>();
+//
+//	public Hashtable<Integer, Integer> getThird_creative() {
+//		return third_creative;
+//	}
+//
+//	public void setThird_creative(Hashtable<Integer, Integer> third_creative) {
+//		this.third_creative = third_creative;
+//	}
+
+	Hashtable<Integer,Hashtable<String,Integer>> third_creative=new Hashtable<>();
+
+	public Hashtable<Integer,Hashtable<String,Integer>> getThird_creative() {
+		return third_creative;
+	}
+
+	public void setThird_creative(Hashtable<Integer,Hashtable<String,Integer>> third_creative) {
+		this.third_creative = third_creative;
+	}
+
+	public int getCreative_id() {
+		return creative_id;
+	}
+
+	public void setCreative_id(int creative_id) {
+		this.creative_id = creative_id;
+	}
+
+	public int getAccount_id() {
+		return account_id;
+	}
+
+	public void setAccount_id(int account_id) {
+		this.account_id = account_id;
+	}
+
+	public int getCampaign_id() {
+		return campaign_id;
+	}
+
+	public void setCampaign_id(int campaign_id) {
+		this.campaign_id = campaign_id;
+	}
+
+	public int getAdgroup_id() {
+		return adgroup_id;
+	}
+
+	public void setAdgroup_id(int adgroup_id) {
+		this.adgroup_id = adgroup_id;
+	}
+
+	public int getCreative_unit_id() {
+		return creative_unit_id;
+	}
+
+	public void setCreative_unit_id(int creative_unit_id) {
+		this.creative_unit_id = creative_unit_id;
+	}
+
+	public short getCreative_type() {
+		return creative_type;
+	}
+
+	public void setCreative_type(short creative_type) {
+		this.creative_type = creative_type;
+	}
+
+	public short getDisplaytype_id() {
+		return displaytype_id;
+	}
+
+	public void setDisplaytype_id(short displaytype_id) {
+		this.displaytype_id = displaytype_id;
+	}
+
+	public int getTemplate_id() {
+		return template_id;
+	}
+
+	public void setTemplate_id(int template_id) {
+		this.template_id = template_id;
+	}
+
+	public Date getSubmit_date() {
+		return submit_date;
+	}
+
+	public void setSubmit_date(Date submit_date) {
+		this.submit_date = submit_date;
+	}
+
+	public String getAudit_reasons() {
+		return audit_reasons;
+	}
+
+	public void setAudit_reasons(String audit_reasons) {
+		this.audit_reasons = audit_reasons;
+	}
+
+	public Date getAudit_date() {
+		return audit_date;
+	}
+
+	public void setAudit_date(Date audit_date) {
+		this.audit_date = audit_date;
+	}
+
+	public String getThird_audit() {
+		return third_audit;
+	}
+
+	public void setThird_audit(String third_audit) {
+		this.third_audit = third_audit;
+	}
+
+	public int getSize_id() {
+		return size_id;
+	}
+
+	public void setSize_id(int size_id) {
+		this.size_id = size_id;
+	}
+
+	public short getWidth() {
+		return width;
+	}
+
+	public void setWidth(short width) {
+		this.width = width;
+	}
+
+	public short getHeight() {
+		return height;
+	}
+
+	public void setHeight(short height) {
+		this.height = height;
+	}
+
+	public String getShrink_expand() {
+		return shrink_expand;
+	}
+
+	public void setShrink_expand(String shrink_expand) {
+		this.shrink_expand = shrink_expand;
+	}
+
+	public String getImg_url() {
+		return img_url;
+	}
+
+	public void setImg_url(String img_url) {
+		this.img_url = img_url;
+	}
+	
+	public int getImg_type() {
+		return img_type;
+	}
+
+	public void setImg_type(int img_type) {
+		this.img_type = img_type;
+	}
+
+	public short getStatus() {
+		return status;
+	}
+
+	public void setStatus(short status) {
+		this.status = status;
+	}
+
+	public int getCopy_from() {
+		return copy_from;
+	}
+
+	public void setCopy_from(int copy_from) {
+		this.copy_from = copy_from;
+	}
+
+	public String getInfo() {
+		return info;
+	}
+
+	public void setInfo(String info) {
+		this.info = info;
+	}
+
+	public String getUp_type() {
+		return up_type;
+	}
+
+	public void setUp_type(String up_type) {
+		this.up_type = up_type;
+	}
+
+}

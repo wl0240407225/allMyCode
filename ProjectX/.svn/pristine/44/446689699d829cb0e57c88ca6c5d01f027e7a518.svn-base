@@ -1,0 +1,75 @@
+package com.yaDsp.material.model;
+
+import java.util.List;
+
+public class AdContent {
+
+	boolean is_show_app_icon;
+	String landing_page;
+	int landing_page_type;
+	List<String> track_click_url;
+	List<String> track_display_url;
+	int type;
+	int picurl_type;
+	String desc;
+	String title;
+
+	public boolean isIs_show_app_icon() {
+		return is_show_app_icon;
+	}
+	public void setIs_show_app_icon(boolean is_show_app_icon) {
+		this.is_show_app_icon = is_show_app_icon;
+	}
+	public String getLanding_page() {
+		return landing_page;
+	}
+	public void setLanding_page(String landing_page) {
+		this.landing_page = landing_page;
+	}
+	public int getLanding_page_type() {
+		return landing_page_type;
+	}
+	public void setLanding_page_type(int landing_page_type) {
+		this.landing_page_type = landing_page_type;
+	}
+	public List<String> getTrack_click_url() {
+		return track_click_url;
+	}
+	public void setTrack_click_url(List<String> track_click_url) {
+		this.track_click_url = track_click_url;
+	}
+	public List<String> getTrack_display_url() {
+		return track_display_url;
+	}
+	public void setTrack_display_url(List<String> track_display_url) {
+		this.track_display_url = track_display_url;
+	}
+	public int getType() {
+		return type;
+	}
+	public void setType(int type) {
+		this.type = type;
+	}
+	public int getPicurl_type() {
+		return picurl_type;
+	}
+	public void setPicurl_type(int picurl_type) {
+		this.picurl_type = picurl_type;
+	}
+
+	public String getDesc() {
+		return desc;
+	}
+
+	public void setDesc(String desc) {
+		this.desc = desc;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+}

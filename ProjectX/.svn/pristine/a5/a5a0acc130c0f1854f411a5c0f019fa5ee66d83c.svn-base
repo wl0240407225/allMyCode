@@ -1,0 +1,353 @@
+package com.yaDsp.strategy.impl;
+
+import java.util.HashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.util.RedisUtil;
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Response;
+
+public class AmountManager {
+ 
+	private  RedisUtil redisUtil=new RedisUtil();
+	private int seconds = 3600*24 *4; //按日key的expire秒数
+
+	private static Logger logger = LoggerFactory.getLogger(AmountManager.class);
+	
+	/**
+	 * 获取campaign某日点击数
+	 * @param day
+	 * @param campaignId
+	 * @return 0 or 正常值
+	 */
+	 public int getCamDayClick(int day,long campaignId)
+	 {
+		 String key  = getCamDayClickKey(day, campaignId);
+		 return redisUtil.getIntByKey(key);
+	 }
+	 /**
+	  * 获取campaign总点击数
+	  * @param campaignId
+	  * @return 0 or 正常值
+	  */
+	 public int getCamTotalClick(long campaignId)
+	 {
+		 String key  = getCamTotalClickKey(campaignId);
+		 return redisUtil.getIntByKey(key);
+	 }
+	 /**
+	  * 获取campaign某日展示数
+	  * @param campaignId
+	  * @return 0 or 正常值
+	  */
+	 public int getCamDayImp(int day,long campaignId)
+	 {
+		 String key  = getCamDayImpKey(day, campaignId);
+		 return redisUtil.getIntByKey(key);
+	 }
+	 /**
+	  * 获取campaign总展示数
+	  * @param campaignId
+	  * @return 0 or 正常值
+	  */
+	 public int getCamTotalImp(long campaignId)
+	 {
+		 String key  = getCamTotalImpKey(campaignId);
+		 return redisUtil.getIntByKey(key);
+	 }
+	
+	 /**
+	  * 获取adgroup 某日点击数
+	  * @param  
+	  * @return 0 or 正常值
+	  */
+	public int getAdgroupDayClick(int day,long adgroupId)
+	{
+		String key = getAdgroupDayClickKey(day, adgroupId);
+		return redisUtil.getIntByKey(key);
+	}
+	 /**
+	  * 获取adgroup 总点击数
+	  * @param  
+	  * @return 0 or 正常值
+	  */
+	public int getAdgroupTotalClick(long adgroupId)
+	{
+		String key = getAdgroupTotalClickKey(adgroupId);
+		return redisUtil.getIntByKey(key);
+	}
+	 /**
+	  * 获取adgroup 某日展示数
+	  * @param  
+	  * @return 0 or 正常值
+	  */
+	public int getAdgroupDayImp(int day,long adgroupId)
+	{
+		String key = getAdgroupDayImpKey(day, adgroupId);
+		return redisUtil.getIntByKey(key);
+	}
+	 /**
+	  * 获取adgroup 某日总展示数
+	  * @param  
+	  * @return 0 or 正常值
+	  */
+	public int getAdgroupTotalImp(long adgroupId)
+	{
+		String key = getAdgroupTotalImpKey(adgroupId);
+		return redisUtil.getIntByKey(key);
+	}
+	
+
+	/**
+	 * 增加点击数：adgroup 某日点击数+1 and adgroupTotal点击数+1 and campaign 某日点击数+1 and campaignTotal 点击数+1
+	 * @param day
+	 * @param adgroupId
+	 * @param campaignId
+	 * @return
+	 */
+	public void incrAdgroupClick(int day,long adgroupId,long campaignId)
+	{
+		Jedis j =null;
+		try
+		{ 
+			j = redisUtil.getWriteInstance();
+			String groupDayKey = getAdgroupDayClickKey(day, adgroupId);
+			String groupTotalKey = getAdgroupTotalClickKey(adgroupId);
+			String camDayKey = getCamDayClickKey(day, campaignId);
+			String camTotalKey = getCamTotalClickKey(campaignId);
+			Pipeline pipeline = j.pipelined(); 
+			Response<Long> groupDayValue = pipeline.incr(groupDayKey);
+			pipeline.incr(groupTotalKey);
+			pipeline.incr(camDayKey);
+			pipeline.incr(camTotalKey);
+			pipeline.sync(); 
+			
+			if(groupDayValue.get() ==1)
+			{	
+				pipeline.expire(groupDayKey, seconds); 
+				pipeline.expire(camDayKey, seconds);
+				pipeline.sync(); 
+			}
+		}
+		catch(Exception ex)
+		{ 
+			logger.error("incrAdgroupClickRedisError:",ex);
+		}
+		finally
+		{
+			if(j != null)
+				j.close();
+		}
+		
+	}
+	
+	/**
+	 * 增加展示数：adgroup 某日展示数+1 and adgroupTotal展示数+1 and campaign 某日展示数+1 and campaignTotal 展示数+1
+	 * @param day
+	 * @param adgroupId
+	 * @param campaignId
+	 * @return
+	 */
+	public void incrAdgroupImp(int day,long adgroupId,long campaignId)
+	{
+		Jedis j =  null;
+		try{
+			j = redisUtil.getWriteInstance();
+			String groupDayKey = getAdgroupDayImpKey(day, adgroupId);
+			String groupTotalKey = getAdgroupTotalImpKey(adgroupId);
+			String camDayKey = getCamDayImpKey(day, campaignId);
+			String camTotalKey = getCamTotalImpKey(campaignId);
+			Pipeline pipeline = j.pipelined(); 
+			Response<Long> groupDayValue = pipeline.incr(groupDayKey);
+			pipeline.incr(groupTotalKey);
+			pipeline.incr(camDayKey);
+			pipeline.incr(camTotalKey);
+			pipeline.sync(); 
+			
+			if(groupDayValue.get() ==1)
+			{	
+				pipeline.expire(groupDayKey, seconds); 
+				pipeline.expire(camDayKey, seconds);
+				pipeline.sync(); 
+			}
+		}
+		catch(Exception ex)
+		{ 
+			logger.error("incrAdgroupImpRedisError:",ex);
+		}
+		finally
+		{
+			if(j != null)
+				j.close();
+		}
+	}
+	 
+	
+	/**
+	 * 批量获取Campaigns展示量
+	 * @param day
+	 * @param adgroupIds
+	 * @return
+	 */
+	public HashMap<Integer,Integer> getCampaignsImp(int day,int[] campaignIds)
+	{ 
+		Jedis j =  null; 
+		try{	
+			HashMap<Integer,Integer> result = new HashMap<Integer,Integer>();
+			HashMap<Integer,Response<String>> tempResult = new HashMap<Integer,Response<String>>();
+			j = redisUtil.getReadInstance(); 
+			Pipeline pipeline = j.pipelined();  
+			for (int id : campaignIds) {
+			
+				String key = getCamDayImpKey(day, id);
+				Response<String> value = pipeline.get(key);
+				tempResult.put(id, value);
+			}
+			pipeline.sync();  
+			for(Integer adgroupId : tempResult.keySet()){
+				result.put(adgroupId, redisString2Int(tempResult.get(adgroupId).get()));
+			}
+			return result;
+		}
+		catch(Exception ex)
+		{ 
+			logger.error("getCampaignsImpRedisError:",ex);
+			return null;
+		}
+		finally
+		{
+			if(j != null)
+				j.close();
+		}
+	}
+	
+	/**
+	 * 批量获取Campaigns 点击量
+	 * @param day
+	 * @param adgroupIds
+	 * @return
+	 */
+	public HashMap<Integer,Integer> getCampaignsClick(int day,int[] campaignIds)
+	{
+		Jedis j =  null;
+		try{	
+			HashMap<Integer,Integer> result = new HashMap<Integer,Integer>();
+			HashMap<Integer,Response<String>> tempResult = new HashMap<Integer,Response<String>>();
+			j = redisUtil.getReadInstance(); 
+			Pipeline pipeline = j.pipelined();  
+			for (int id : campaignIds) {
+			
+				String key = getCamDayClickKey(day, id);
+				Response<String> value = pipeline.get(key);
+				tempResult.put(id, value);
+			}
+			pipeline.sync();  
+			for(Integer adgroupId : tempResult.keySet()){
+				result.put(adgroupId, redisString2Int(tempResult.get(adgroupId).get()));
+			}
+			return result;
+		}
+		catch(Exception ex)
+		{ 
+			logger.error("getCampaignsClickRedisError:",ex);
+			return null;
+		}
+		finally
+		{
+			if(j != null)
+				j.close();
+		}
+	}
+	
+	private  String getCamDayClickKey(int day, long campaignId)
+	{
+		 
+		return String.format("ccd%s%s", day,campaignId);
+	}
+	
+	private  String getCamTotalClickKey(long campaignId)
+	{
+		 
+		return String.format("cct%s",campaignId);
+	}
+	private  String getCamDayImpKey(int day, long campaignId)
+	{
+		 
+		return String.format("cid%s%s", day,campaignId);
+	}
+	
+	private  String getCamTotalImpKey(long campaignId)
+	{
+		 
+		return String.format("cit%s",campaignId);
+	}
+	
+	
+	 
+	private  String getAdgroupDayClickKey(int day, long adgroupId)
+	{
+		return String.format("gcd%s%s", day,adgroupId);
+	}
+	private  String getAdgroupTotalClickKey(long adgroupId)
+	{
+		return String.format("gct%s", adgroupId);
+	}
+	private  String getAdgroupDayImpKey(int day, long campaignId)
+	{
+		return String.format("gid%s%s", day,campaignId);
+	}
+	private  String getAdgroupTotalImpKey(long campaignId)
+	{		 
+		return String.format("git%s",campaignId);
+	}
+	
+	public void setImp(int day,long adgroupId,long campaignId,int spent)
+	{
+		Jedis j = redisUtil.getWriteInstance();
+		String groupDayKey = getAdgroupDayImpKey(day, adgroupId);
+		String groupTotalKey = getAdgroupTotalImpKey(adgroupId);
+		String camDayKey = getCamDayImpKey(day, campaignId);
+		String camTotalKey = getCamTotalImpKey(campaignId);
+		Pipeline pipeline = j.pipelined(); 
+		pipeline.set(groupDayKey,Integer.toString(spent));
+		pipeline.set(groupTotalKey,Integer.toString(spent));
+		pipeline.set(camDayKey,Integer.toString(spent));
+		pipeline.set(camTotalKey,Integer.toString(spent));
+		pipeline.sync();  
+		j.close(); 
+	}
+	
+	public void setClick(int day,long adgroupId,long campaignId,int spent)
+	{
+		Jedis j = redisUtil.getWriteInstance();
+		String groupDayKey = getAdgroupDayClickKey(day, adgroupId);
+		String groupTotalKey = getAdgroupTotalClickKey(adgroupId);
+		String camDayKey = getCamDayClickKey(day, campaignId);
+		String camTotalKey = getCamTotalClickKey(campaignId);
+		Pipeline pipeline = j.pipelined(); 
+		pipeline.set(groupDayKey,Integer.toString(spent));
+		pipeline.set(groupTotalKey,Integer.toString(spent));
+		pipeline.set(camDayKey,Integer.toString(spent));
+		pipeline.set(camTotalKey,Integer.toString(spent));
+		pipeline.sync(); 
+		j.close(); 
+	}
+	
+	public int redisString2Int(String value) {
+		 
+		try {
+			if (value != null && !value.equals("")) { 
+				return Integer.parseInt(value);
+			}
+		} catch (Exception e) {
+			logger.error("formatRedisStringError:", e);
+			return -1;
+		}  
+		return 0;
+	}
+}
+

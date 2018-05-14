@@ -1,0 +1,90 @@
+package com.yaDsp.engine.selector;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.function.Predicate;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.alibaba.fastjson.JSON;
+import com.yaDsp.material.*;
+import com.yaDsp.material.model.*;
+import com.yaDsp.model.standard.request.BidRequest;
+import com.yaDsp.util.ListUtil;
+
+public class AccountFilter {
+
+	private static Logger logger = LoggerFactory.getLogger(AccountFilter.class);
+	
+	/**
+	 * 循环过滤Account
+	 * @return 匹配的AccountId集合
+	 */
+	public static List<Integer> iterateFilter(BidRequest request) {
+		List<Integer> result = new ArrayList<Integer>();
+
+		AccountServiceImpl accountService = new AccountServiceImpl();
+		HashMap<Integer, Account> accountTable = accountService
+				.getAllAccount();
+		
+		boolean isDebug=request.isDebug();
+
+		accountTable.forEach((accountId, account) -> {
+			// 账户余额 > 0
+			// 虚拟金额 > 0
+				if (account.getAmount() > 0 
+					&& judgeBlackList(request, account,isDebug))
+						//&& (account.getVirtual_amount() > 0))  暂时注释
+				{
+					result.add(account.getAccount_id());
+				}
+			});
+
+		return result;
+	}
+	
+	public static boolean judgeBlackList(BidRequest request, Account account,boolean isDebug){
+		boolean result = true;
+		BlackList blackList= account.getBlackList();
+		if(blackList != null){
+			String sspId = request.getSsp_id();
+			// String sspChn = request.getApp().getCat();
+			//app id
+			String sspContent = request.getApp().getId();
+			List<String> mediaIds = new ArrayList<String>();
+			
+			blackList.getMedias().stream().forEach(m -> mediaIds.add(m.getId()));
+			
+			Predicate<Media> condition = m -> sspId.equals(m.getId())
+			&& m.getChannels().stream().anyMatch(
+					c -> c.getContents().stream().anyMatch(t -> sspContent!=null && sspContent.equals(t.getMapping_id())));
+			
+			if (blackList.getDirection() == 0) {
+				 
+				result = blackList.getMedias().stream().anyMatch(condition);
+			}
+			else
+			{
+				 
+				result = !blackList.getMedias().stream().anyMatch(condition);
+			}
+			
+			if (!result && isDebug) {
+				
+				logger.debug(String.format("媒体 accountId:%d\tDB.BlackList.MediaIds:%s\tRequest.sspId:%s", 
+						account.getAccount_id(),
+						ListUtil.strListToString(mediaIds),
+						request.getSsp_id()));
+				
+				String strJson = blackList.getMedias() != null ? JSON.toJSONString(blackList.getMedias()) : "";
+				logger.debug("DB.BlackList: " + strJson);
+				
+				logger.debug("request.App.sspContent: " + sspContent);
+			}
+		}
+		
+		return result;
+	}
+}

@@ -1,0 +1,128 @@
+package com.yaDsp.strategy;
+ 
+import java.util.List;
+import java.util.function.Predicate;
+
+import com.yaDsp.model.standard.request.BidRequest;
+ 
+  
+public class GroupStrategyConfig {
+
+	public List<String> getFilterRules() {
+		return filterRules;
+	}
+
+	public void setFilterRules(List<String> filterRules) {
+		this.filterRules = filterRules;
+	}
+
+	public String getGroupName() {
+		return groupName;
+	}
+
+	public void setGroupName(String groupName) {
+		this.groupName = groupName;
+	}
+
+	public List<String> getFilterStrategies() {
+		return filterStrategies;
+	}
+
+	public void setFilterStrategies(List<String> filterStrategies) {
+		this.filterStrategies = filterStrategies;
+	}
+
+	public List<String> getPrioprityStrategies() {
+		return prioprityStrategies;
+	}
+
+	public void setPrioprityStrategies(List<String> prioprityStrategies) {
+		this.prioprityStrategies = prioprityStrategies;
+	}
+
+	public Double getExecutionRate() {
+		return executionRate;
+	}
+
+	public void setExecutionRate(Double executionRate) {
+		this.executionRate = executionRate;
+	}
+	
+	
+	public GroupStrategy buildStrategy()
+	{
+		GroupStrategy s=new GroupStrategy();
+		s.setExecutionRate(this.executionRate);
+		s.setName(this.groupName);
+		
+		filterStrategies.stream().forEach(c->{
+		   try {
+				s.AddStrategy((FilterStrategy)(Class.forName(packageName+c).getDeclaredConstructor().newInstance()));
+			  
+				
+			} catch (Exception e) {
+				 
+				e.printStackTrace();
+			}
+		});
+	
+		prioprityStrategies.stream().forEach(c->{
+			   try {
+				   if( null != c && !"".equals(c.trim()))
+				   s.AddStrategy((PriorityStrategy)(Class.forName(packageName+c).getDeclaredConstructor().newInstance()));
+				 
+				} catch (Exception e) {
+					 
+					e.printStackTrace();
+				}
+			});
+		
+		Predicate<BidRequest> tester=filterRules.stream().map(r->buildSingleRule(r))
+				.reduce(PredicateHelper.True(),(acc,e)->PredicateHelper.And(acc, e));
+		s.SetFilter(tester);
+	
+		
+		return s;
+	}
+	
+	static String packageName="com.yaDsp.strategy.impl.";
+	
+	Predicate<BidRequest> buildSingleRule(String rule)
+	{
+		 //֧�ֵĸ�ʽ���� fieldA==y
+		  String[] operands=rule.split("=");
+		  
+		  if(operands[0].toLowerCase().equals("sourcetype"))
+		  {
+			  Predicate<BidRequest> p=r->(r.getApp()==null?"2":"1").equals(operands[1]);
+			  return p;
+		  }else{
+			  //......
+		  }
+		  Predicate<BidRequest> p=r->false;
+		  return p;
+	}
+	
+	 String groupName;
+		
+	 List<String> filterStrategies;
+
+	 List<String> prioprityStrategies;
+	 
+	 List<String> filterRules;
+	
+     Double executionRate;
+
+}
+
+class PredicateHelper
+{
+	static <T> Predicate<T> True(){
+		return t->true;		
+	}
+	
+	static <T> Predicate<T> And(Predicate<T> a,Predicate<T> b){
+		return t-> a.test(t) && b.test(t);
+		
+	}
+}

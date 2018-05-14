@@ -1,0 +1,36 @@
+package com.yaDsp.material.model;
+
+import java.util.HashMap;
+import java.util.List;
+
+/**
+ * Adgroup 鍧囧寑鎶曟斁鎺у埗淇℃伅
+ * @author wangyufeng
+ *
+ */
+public class SmoothlySpent {
+
+	/**
+	 *  0:涓嶉檺锛? 1锛氬睍绀?  2锛氶绠?
+	 */
+	public int smoothlyType;
+	
+	/**
+	 * campaign 鎬绘姇鏀惧ぉ鏁帮紝0锛氫笉闄愬ぉ鏁帮紝
+	 */
+	public int totalDays;
+	
+	/**
+	 * 鎶曟斁鍛ㄦ湡
+	 * yyyyMMdd
+	 */
+	public List<Integer> activeDays;
+
+	/**
+	 * campaign 姣忓懆鍑犵殑鎶曟斁鏃堕棿
+	 * key锛氬懆鍑狅紵 = 1,2,3,4,5,6,7
+	 * value:24鎶曟斁鐘舵?侊細"1000000011....1111"; 1锛氭姇鏀撅紝0锛氫笉鎶曟斁
+	 */
+	public HashMap<Integer,String> adHours;
+	
+}

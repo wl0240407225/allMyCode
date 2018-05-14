@@ -1,0 +1,61 @@
+package com.yaDsp.util;
+
+import java.io.File;
+import java.io.IOException;
+
+import jodd.props.Props;
+
+public class ConfigManager {
+
+	static Props props =null;
+	static String env = null;
+	
+	public static String GetConfigFilePath(String file) 
+	{
+		String path=ConfigManager.class.getProtectionDomain().getCodeSource().getLocation().getFile();
+		File f=new File(path);
+		String conf=f.getParentFile().getAbsolutePath()+"/"+file;
+		return conf;
+	}
+	
+	public static  String Get(String key) {
+		ensureInit();		
+		return props.getValue(key,env);
+		 
+	}
+	
+	public static  int GetInt(String key) {
+		ensureInit();		
+		return props.getIntegerValue(key,env);		 
+	}
+	
+	public static  Long GetLong(String key) {
+		ensureInit();		
+		return props.getLongValue(key,env);		 
+	}
+	
+	private static synchronized void ensureInit() {
+		if(props==null) {		 
+			String conf=GetConfigFilePath("/dsp.conf");
+			File f=new File(conf);
+			try {
+				props = new Props();
+				props.load(f);
+				env = props.getValue("env");
+			} catch (IOException e) {			 
+				e.printStackTrace();
+			}
+		}
+	}
+}
+/**
+ * 
+ * 		String url=ConfigManager.Get("db.url");
+		System.out.println(url);
+		
+		String host=ConfigManager.Get("redis.readHost");
+		System.out.println(host);
+		
+		String path=ConfigManager.Get("log.logPath");
+		System.out.println(path);
+*/

@@ -1,0 +1,56 @@
+package com.yaDsp.engine.selector;
+
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.yaDsp.material.*;
+import com.yaDsp.material.model.*;
+import com.yaDsp.model.standard.request.BidRequest;
+
+public class Selector{
+	 
+	 
+	public static List<Ad> Filter(BidRequest request) {
+
+		List<Ad> result = new ArrayList<Ad>();
+		
+		try
+		{
+			List<Integer> accountIds = AccountFilter.iterateFilter(request);
+			List<Integer> campaignIds = CampaignFilter.iterateFilter(request, accountIds);
+			List<Integer> adgroupIds = AdgroupFilter.iterateFilter(request, campaignIds);
+			List<Integer> creativeUnitIds = CreativeUnitFilter.iterateFilter(request, adgroupIds);
+			List<Creative> creatives = CreativeFilter.iterateFilter(request, creativeUnitIds);
+	
+			AccountServiceImpl accountServiceImpl = new AccountServiceImpl();
+			CampaignServiceImpl campaignServiceImpl = new CampaignServiceImpl();
+			AdgroupServiceImpl adgroupServiceImpl = new AdgroupServiceImpl();
+			CreativeUnitServiceImpl creativeUnitServiceImpl = new CreativeUnitServiceImpl();
+			
+			for (Creative creative : creatives) {
+				Ad ad = new Ad();
+				ad.creativeId = creative.getCreative_id();
+				ad.adgroupId = creative.getAdgroup_id();
+				ad.campiagnId = creative.getCampaign_id();
+				ad.accountId = creative.getAccount_id();
+				
+				ad.creative = creative;
+				ad.creativeUnit = creativeUnitServiceImpl.getCreativeUnit(creative.getCreative_unit_id());
+				ad.adgroup = adgroupServiceImpl.getAdgroup(creative.getAdgroup_id());
+				ad.campaign = campaignServiceImpl.getCampaign(creative.getCampaign_id());
+				ad.account = accountServiceImpl.getAccount(creative.getAccount_id());
+				
+				result.add(ad);
+			}
+		}
+		catch(Exception ex)
+		{
+			System.out.println("Msg:" + ex.getMessage());
+			System.out.println("Trace:");
+			ex.printStackTrace();
+			throw ex;
+		}
+		return result;
+	}
+}

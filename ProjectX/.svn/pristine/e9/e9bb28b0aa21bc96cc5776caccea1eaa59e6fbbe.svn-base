@@ -1,0 +1,282 @@
+package com.yaDsp.util;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.util.ConfigManager;
+
+public class IpUtil {
+	private static Logger logger = LoggerFactory.getLogger(IpUtil.class);
+	private static ArrayList<IpInfo> ipInfoList = new ArrayList<IpInfo>();
+	private static HashMap<Integer, String[]> areaInfoList = new HashMap<Integer, String[]>();
+	private static String nullText = "未知";
+	private static Pattern ipregex = Pattern.compile("\\d{1,3}.\\d{1,3}.\\d{1,3}.\\d{1,3}");
+
+	// public static void main(String[] args){
+	// ini();
+	// String[] info = getAreaInfo("61.160.120.26");
+
+	// info = getAreaInfo("211");
+	// }
+
+	/**
+	 * (维护用)
+	 * 
+	 * @param in
+	 * @param out
+	 */
+	@SuppressWarnings("unused")
+	private static void comparison(String in, String out) {
+		List<String> list = null;
+		System.out.println("加载文件");
+		try {
+			list = Files.readAllLines(Paths.get(in));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("ip转化");
+		List<String> list2 = list.parallelStream().map(x -> {
+			String[] ip1 = getAreaInfo(StringUtils.splitPreserveAllTokens(x, "\t")[0].trim());
+			String ip1String = "";
+			if (ip1 != null) {
+				ip1String = ip1[0] + ip1[1];
+			}
+			String[] ip2 = getAreaInfo(StringUtils.splitPreserveAllTokens(x, "\t")[1].trim());
+			String ip2String = "";
+			if (ip2 != null) {
+				ip2String = ip2[0] + ip2[1];
+			}
+			return String.format("%s\t%s\t%s\t%s", StringUtils.splitPreserveAllTokens(x, "\t")[0], ip1String,
+					StringUtils.splitPreserveAllTokens(x, "\t")[1], ip2String);
+		}).collect(Collectors.toList());
+
+		System.out.println("生成文件");
+		try {
+			Files.write(Paths.get(out), list2, StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("结束");
+	}
+
+	/**
+	 * 初始化
+	 */
+	public static void init() {
+		try {
+			ArrayList<String[]> textList = new ArrayList<String[]>();
+			// 加载城市信息
+			String cityFilepath =ConfigManager.GetConfigFilePath("/arealist.csv");
+			textList = getTextFromCSV(cityFilepath);
+			for (String[] temp : textList) {
+				areaInfoList.put(Integer.parseInt(temp[0]), new String[] { temp[1], temp[2] });
+			}
+			// 加载IP信息
+			String ipFilepath = ConfigManager.GetConfigFilePath("/iplist.csv");
+			textList = getTextFromCSV(ipFilepath);
+			IpInfo tempIpInfo = null;
+			for (String[] temp : textList) {
+				tempIpInfo = new IpInfo();
+				tempIpInfo.setFromIp(temp[0]);
+				tempIpInfo.setFromIpValue(getIpValue(temp[0]));
+				tempIpInfo.setToIp(temp[1]);
+				tempIpInfo.setToIpValue(getIpValue(temp[1]));
+				tempIpInfo.setId(Integer.parseInt(temp[2]));
+				// 将ID对应的城市信息填充到IP信息中
+				String[] areaInfo = areaInfoList.get(Integer.parseInt(temp[2]));
+				if (areaInfo != null) {
+					tempIpInfo.setProvinceName(areaInfo[0]);
+					tempIpInfo.setCityName(areaInfo[1]);
+				} else {
+					tempIpInfo.setProvinceName(nullText);
+					tempIpInfo.setCityName(nullText);
+				}
+				ipInfoList.add(tempIpInfo);
+			}
+		} catch (Exception e) {
+			logger.error("加载配置文件异常:{}", e);
+		}
+	}
+
+	/**
+	 * 根据传入的IP地址获取对应地区信息
+	 * 
+	 * @param ip
+	 * @return
+	 */
+	public static String[] getAreaInfo(String ip) {
+		String[] areaInfo = new String[] { nullText, nullText };
+		if (ipregex.matcher(ip).matches()) {
+			try {
+				long ipValue = getIpValue(ip);
+				for (IpInfo temp : ipInfoList) {
+					if (ipValue >= temp.getFromIpValue() && ipValue <= temp.getToIpValue()) {
+						areaInfo[0] = temp.getProvinceName();
+						areaInfo[1] = temp.getCityName();
+						break;
+					}
+				}
+			} catch (Exception e) {
+				logger.error("IP转化出错", e);
+			}
+		}
+		return areaInfo;
+	}
+
+	/**
+	 * 将IP地址转化为数值
+	 * 
+	 * @param ip
+	 * @return
+	 */
+	private static long getIpValue(String ip) {
+		String[] ipPartList = ip.split("\\.");
+		long ipValue = 0L;
+		for (int i = 0; i < 4; ++i) {
+			ipValue = ipValue << 8 | Integer.parseInt(ipPartList[i]);
+		}
+		return ipValue;
+	}
+
+	/**
+	 * 从指定的路径读取CSV信息
+	 * 
+	 * @param filePath
+	 * @return
+	 */
+	private static ArrayList<String[]> getTextFromCSV(String filePath) {
+		ArrayList<String[]> textList = new ArrayList<String[]>();
+		BufferedReader bf = null;
+		try {
+			// 输入流
+			FileInputStream fi = new FileInputStream(filePath);
+			InputStreamReader is = new InputStreamReader(fi, "UTF-8"); // 指定以UTF-8编码读入
+			bf = new BufferedReader(is);
+			String temp = null;
+			while ((temp = bf.readLine()) != null) {
+				textList.add(temp.split(","));
+			}
+		} catch (IOException e) {
+			logger.error("文件未找到:{}", e);
+		} finally {
+			// 关闭BufferedReader
+			if (bf != null) {
+				try {
+					bf.close();
+				} catch (IOException e) {
+					logger.error("关闭字节流异常:{}", e);
+				}
+			}
+		}
+		return textList;
+	}
+
+	/**
+	 * 
+	 * @Description 获取客户端真实ip
+	 * @param request
+	 * @return
+	 *
+	 * @author wjggwm
+	 * @data 2016年11月21日 下午5:10:22
+	 */
+	public static String getIpAddr(HttpServletRequest request) {
+		String ip = request.getHeader("x-forwarded-for");
+		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+			ip = request.getHeader("Proxy-Client-IP");
+		}
+		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+			ip = request.getHeader("WL-Proxy-Client-IP");
+		}
+		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+			ip = request.getHeader("X-Real-IP");
+		}
+		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+			ip = request.getRemoteAddr();
+		}
+		return ip;
+	}
+}
+
+class IpInfo {
+	private String fromIp;
+	private String toIp;
+	private int id;
+	private long fromIpValue;
+	private long toIpValue;
+	private String provinceName;
+	private String cityName;
+
+	public long getFromIpValue() {
+		return fromIpValue;
+	}
+
+	public void setFromIpValue(long fromIpValue) {
+		this.fromIpValue = fromIpValue;
+	}
+
+	public long getToIpValue() {
+		return toIpValue;
+	}
+
+	public void setToIpValue(long toIpValue) {
+		this.toIpValue = toIpValue;
+	}
+
+	public String getFromIp() {
+		return fromIp;
+	}
+
+	public void setFromIp(String fromIp) {
+		this.fromIp = fromIp;
+	}
+
+	public String getToIp() {
+		return toIp;
+	}
+
+	public void setToIp(String toIp) {
+		this.toIp = toIp;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getProvinceName() {
+		return provinceName;
+	}
+
+	public void setProvinceName(String provinceName) {
+		this.provinceName = provinceName;
+	}
+
+	public String getCityName() {
+		return cityName;
+	}
+
+	public void setCityName(String cityName) {
+		this.cityName = cityName;
+	}
+}

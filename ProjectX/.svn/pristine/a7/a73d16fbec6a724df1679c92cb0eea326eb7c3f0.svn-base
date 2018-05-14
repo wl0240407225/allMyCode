@@ -1,0 +1,501 @@
+package com.yaDsp.material;
+
+ 
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+
+import com.yaDsp.material.model.*;
+import com.yaDsp.util.DateFormatterUtil;
+
+public class TargetConverter<T> {
+ 
+	
+//	public static void main(String args[]){
+//		ConvertThirdAudit("[{\"ssp_id\":103,\"ssp_name\":\"汽车之家\",\"ssp_status\":1,\"ssp_reasons\":\"\",\"ssp_modify_time\":\"2016-11-17 17:40:04\",\"ssp_modifier\":1}]");
+//	}
+
+ 
+	private static Logger logger = LoggerFactory
+			.getLogger(TargetConverter.class.getSimpleName());
+	
+//	private static Map<String,Map<String,String>> commonTargetingMap = new HashMap<>();
+	
+//	static{
+//		Map<String,String> temp = new HashMap<>(); 
+//		temp.put("male", "0101001");
+//		temp.put("female", "0101002");
+//		commonTargetingMap.put("gender", temp);
+//		
+//		temp = new HashMap<>();
+//		temp.put("0-18", "0102001");
+//		temp.put("19-23", "0102002");
+//		temp.put("24-30", "0102003");
+//		temp.put("31-40", "0102004");
+//		temp.put("41-50", "0102005");
+//		temp.put("51-", "0102006");
+//		commonTargetingMap.put("age", temp);
+//	}
+	
+
+	public static HashSet<String> ConvertDeviceTargeting(String data) {
+		TargetingTag tag = JSON.parseObject(data, TargetingTag.class);
+		if (tag.getSet_type().equals("defined")) {
+			HashSet<String> result = new HashSet<String>();
+
+			for (Tag t : tag.getTags()) {
+				try {
+					HashSet<String> r = loadIdFromTag(t);
+					if (r != null)
+						result.addAll(r);
+				} catch (Exception e) {
+				}
+			}
+			return result;
+		}
+
+		return null;
+	}
+
+	private static HashSet<String> loadIdFromTag(Tag t)
+			throws MalformedURLException, IOException,
+			NoSuchAlgorithmException, UnsupportedEncodingException {
+		String id = t.getTag_id();
+
+		if (idCache.containsKey(id)) {
+			return idCache.get(id);
+		}
+
+		URL url = new URL(t.getTag_url());
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		conn.setDoOutput(true);
+		HashSet<String> result = new HashSet<String>();
+		//设置一个任意的默认值作为设备号，防止http未获取到实际数据时，漏判断设备号
+		result.add("-_-||");
+		int respCode = conn.getResponseCode();
+		if (respCode == 200) {
+			InputStream inStream = conn.getInputStream();
+			InputStreamReader r = new InputStreamReader(inStream);
+			StringBuilder msg = new StringBuilder();
+			int c = 0;
+			while ((c = r.read()) != -1) {
+				msg.append((char) c);
+			}
+			r.close();
+			inStream.close();
+
+			String[] ids = msg.toString().split("\\n");
+			for (String uid : ids) {
+				uid = uid.trim();
+				result.add(uid);
+				result.add(EncodeByMd5(uid));
+
+				if (!uid.toLowerCase().equals(uid)) {
+					result.add(uid.toLowerCase());
+				}
+			}
+			return result;
+		}
+		else{
+			logger.error("loadIdFromTag http请求未成功",t.getTag_url());
+		}
+
+		return result;
+	}
+
+	static String EncodeByMd5(String str) throws NoSuchAlgorithmException,
+			UnsupportedEncodingException {
+		try {
+			MessageDigest md5 = MessageDigest.getInstance("MD5");
+
+			String newstr = byteToString(md5.digest(str.getBytes("utf-8")));
+			return newstr;
+		} catch (Exception e) {
+
+		}
+		return "";
+	}
+
+	private static String byteToString(byte[] bByte) {
+		StringBuffer sBuffer = new StringBuffer();
+		for (int i = 0; i < bByte.length; i++) {
+			sBuffer.append(byteToArrayString(bByte[i]));
+		}
+		return sBuffer.toString();
+	}
+
+	private static String byteToArrayString(byte bByte) {
+		int iRet = bByte;
+		// System.out.println("iRet="+iRet);
+		if (iRet < 0) {
+			iRet += 256;
+		}
+		int iD1 = iRet / 16;
+		int iD2 = iRet % 16;
+		return strDigits[iD1] + strDigits[iD2];
+	}
+
+	private final static String[] strDigits = { "0", "1", "2", "3", "4", "5",
+			"6", "7", "8", "9", "a", "b", "c", "d", "e", "f" };
+	static HashMap<String, HashSet<String>> idCache = new HashMap<String, HashSet<String>>();
+
+	// debug 环境
+	public static FrequencyControl ConvertFrequncyCap(String data) {
+		FrequencyControl model = new FrequencyControl();
+		FreqCapDbModel db = JSON.parseObject(data, FreqCapDbModel.class);
+		if (db.set_type.equals("all"))
+			model.ControlTarget = 0;
+		else if (db.set_type.equals("defined")) {
+			if (db.dur_type.equals("day"))
+				model.ControlType = 1;
+			else if (db.dur_type.equals("week"))
+				model.ControlType = 2;
+			else if (db.dur_type.equals("month"))
+				model.ControlType = 3;
+			else
+				model.ControlType = 4;
+			model.TotalAmount = Integer.parseInt(db.frequency);
+			if (db.control_type.equals("display"))
+				model.ControlTarget = 1;
+			else
+				model.ControlTarget = 2;
+		}
+		return model;
+	}
+
+	public static BudgetControl ConvertBudget(BigDecimal daily, BigDecimal total) {
+		BudgetControl model = new BudgetControl();
+		model.ControlType = 0;
+
+		if (daily != null && daily.compareTo(BigDecimal.valueOf(0)) > 0) {
+			model.ControlType = 1;
+			model.DialyBudget = daily.intValue();
+		}
+
+		if (total != null && total.compareTo(BigDecimal.valueOf(0)) > 0) {
+			model.ControlType |= 2;
+			model.TotalBudget = total.intValue();
+		}
+		return model;
+	}
+
+	public static AmountControl ConvertAmount(String daily, String total) {
+		AmountControl model = new AmountControl();
+		model.ControlType = 0;
+
+		AmountControlDbModel dailyDb = JSON.parseObject(daily,
+				AmountControlDbModel.class);
+		AmountControlDbModel totalDb = JSON.parseObject(total,
+				AmountControlDbModel.class);
+
+		if (dailyDb.set_type.equals("limited")) {
+			model.ControlType = 1;
+			model.DailyAmount = Integer.parseInt(dailyDb.value);
+			if(StringUtils.isNotEmpty(dailyDb.days)){
+				model.Days = ConvertToMap(Integer.class,dailyDb.days);
+			}
+		}
+
+		if (totalDb != null && totalDb.set_type.equals("limited")) {
+			model.ControlType |= 2;
+			model.TotalAmount = Integer.parseInt(totalDb.value);
+		}
+
+		return model;
+
+	}
+
+	public static ExcludeCycle ConvertExcludeCycle(String data) {
+		return JSON.parseObject(data, ExcludeCycle.class);
+//		try {
+//			ExcludeCycle cycle = JSON.parseObject(data, ExcludeCycle.class);
+//			return cycle;
+//		} catch (Exception e) {
+//			logger.debug(e.getMessage());
+//		}
+//		return null;
+	}
+
+	public static AdContent ConvertAdContent(String data) {
+		return JSON.parseObject(data, AdContent.class);
+	}
+
+	public static TargetingApp ConverrApp(String data) {
+		TargetingApp app = JSON.parseObject(data, TargetingApp.class);
+		return app;
+	}
+
+	public static <T> T ConvertFromJson(String data, Class<T> tClass) {
+		T t = JSON.parseObject(data, tClass);
+		return t;
+	}
+
+	public static SmoothlySpent ConvertSmooth(Date start, Date end,
+			String exclude, String targethour, short type) {
+		SmoothlySpent spent = new SmoothlySpent();
+		spent.activeDays = new ArrayList<Integer>();
+		spent.smoothlyType = type;
+		spent.adHours = new HashMap<Integer, String>();
+
+		if (start == null || end == null || type == 0) {
+			spent.smoothlyType = 0;
+			return spent;
+		}
+		ExcludeCycle cycle = ConvertExcludeCycle(exclude);
+		Set<Integer> target = null;
+		if (!targethour.equals("0")) {
+			target = Arrays.stream(targethour.split(","))
+					.map(s -> Integer.parseInt(s) - 1)
+					.collect(Collectors.toSet());
+		}
+
+		GregorianCalendar gc = new GregorianCalendar();
+		for (Date d = start; d.before(end) || d.equals(end);) {
+			boolean excluded = false;
+			if (cycle.getSet_type().equals("defined")) {
+				for (Cycle c : cycle.getCycle()) {
+					if ((c.getStartDate().before(d) || c.getStartDate().equals(
+							d))
+							&& (c.getEndDate().after(d) || c.getEndDate()
+									.equals(d))) {
+						excluded = true;
+						break;
+					}
+				}
+			}
+			boolean timeIntervalExcluded = true;
+			if (target != null) {
+				int day = DateFormatterUtil.getDayOfWeek(d);
+				for (int test = day * 7 + 1; test <= day * 7 + 24; test++) {
+					if (target.contains(test)) {
+						timeIntervalExcluded = false;
+						break;
+					}
+				}
+			} else
+				timeIntervalExcluded = false;
+
+			excluded = excluded || timeIntervalExcluded;
+
+			if (!excluded) {
+				int date = Integer.parseInt(DateFormatterUtil.formatDate(d,
+						"yyyyMMdd"));
+				spent.activeDays.add(date);
+			}
+
+			gc.setTime(d);
+			gc.add(5, 1);
+			d = gc.getTime();
+		}
+
+		char[] hours = new char[168];
+		if (target != null) {
+			for (int i = 0; i < 168; i++)
+				hours[i] = '0';
+
+			for (int i : target) {
+				hours[i] = '1';
+			}
+		} else {
+			for (int i = 0; i < 168; i++)
+				hours[i] = '1';
+		}
+
+		for (int day = 1; day <= 7; day++) {
+			String str = String.valueOf(Arrays.copyOfRange(hours,
+					(day - 1) * 24, day * 24));
+			spent.adHours.put(day, str);
+		}
+		spent.totalDays = spent.activeDays.size();
+		return spent;
+
+	}
+
+	public static Hashtable<Integer, Hashtable<String,Integer>> ConvertThirdAudit(String third) {
+		Hashtable<Integer, Hashtable<String,Integer>> table = new Hashtable<>();
+		if (third != null) {
+			List<ThirdAuditModel> models = JSON.parseArray(third,
+					ThirdAuditModel.class);
+			if (models != null) {
+				for (ThirdAuditModel m : models) {
+//					if (m.getSsp_creative_id() > 0) {
+//						table.put(m.getSsp_id(), m.getSsp_creative_id());
+//					}
+					if(m.getSsp_creative_id() != null){
+						try{
+							JSONObject ssp_creative_id = JSON.parseObject(m.getSsp_creative_id());
+							Hashtable<String,Integer> creative_idList = new Hashtable<>(); 
+							if (ssp_creative_id != null) {
+								ssp_creative_id.keySet().forEach(key->{
+									creative_idList.put(key, ssp_creative_id.getInteger(key));
+								});
+								table.put(m.getSsp_id(), creative_idList);
+							}	
+						}
+						catch(Exception e){
+							//special handling ignore for now
+							// logger.error("转换异常:" + m.getSsp_creative_id(),e);
+						}
+					}
+				}
+			}
+		}
+		return table;
+	}
+	
+//	public static Set<String> ConvertTargeting_Common(String type,String json){
+//		Set<String> set = new HashSet<>();
+//		if(json != null){
+//			JSONObject obj = JSONObject.parseObject(json);
+//			String gender = obj.getString(type);
+//			if(gender != null){
+//				JSONObject.parseArray(gender).forEach(key->{
+//					set.add(commonTargetingMap.get(type).get(key)); 
+//				});
+//			}
+//		}
+//		return set;
+//	}
+	
+	public static Set<String> ConvertTargeting_Common(String type,String json){
+		Set<String> set = new HashSet<>();
+		if(json != null){
+			JSONObject obj = JSONObject.parseObject(json);
+			if(obj.containsKey(type)){
+				obj.getJSONArray(type).forEach(item->{
+					JSONObject sspValue = (JSONObject)item;
+					if(sspValue.containsKey("data")){
+						set.addAll(Arrays.asList(sspValue.getJSONArray("data").toArray(new String[0])));	
+					}
+				});	
+			}
+		}
+		return set;
+	}
+	
+	public static <T>Map<String,T> ConvertToMap(Class<T> clazz, String json){
+		Hashtable<String,T> map = new Hashtable<>();
+		JSONObject obj = JSON.parseObject(json);
+		if (obj != null) {
+			obj.keySet().forEach(key->{
+				map.put(key, obj.getObject(key, clazz));
+			});
+		}
+		return map;
+	}
+}
+
+class ThirdAuditModel{
+	int ssp_id;
+	String ssp_creative_id;
+	public String getSsp_creative_id() {
+		return ssp_creative_id;
+	}
+	public void setSsp_creative_id(String ssp_creative_id) {
+		this.ssp_creative_id = ssp_creative_id;
+	}
+	public int getSsp_id() {
+		return ssp_id;
+	}
+	public void setSsp_id(int ssp_id) {
+		this.ssp_id = ssp_id;
+	}
+	 
+}
+
+class FreqCapDbModel {
+	String set_type;
+	String dur_type;
+	String frequency;
+	String control_type;
+
+	public String getSet_type() {
+		return set_type;
+	}
+
+	public void setSet_type(String set_type) {
+		this.set_type = set_type;
+	}
+
+	public String getDur_type() {
+		return dur_type;
+	}
+
+	public void setDur_type(String dur_type) {
+		this.dur_type = dur_type;
+	}
+
+	public String getFrequency() {
+		return frequency;
+	}
+
+	public void setFrequency(String frequency) {
+		this.frequency = frequency;
+	}
+
+	public String getControl_type() {
+		return control_type;
+	}
+
+	public void setControl_type(String control_type) {
+		this.control_type = control_type;
+	}
+
+}
+
+class AmountControlDbModel {
+	String set_type;
+	String value;
+	String days;
+
+	public String getSet_type() {
+		return set_type;
+	}
+
+	public void setSet_type(String set_type) {
+		this.set_type = set_type;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
+	}
+
+	public String getDays() {
+		return days;
+	}
+
+	public void setDays(String days) {
+		this.days = days;
+	}
+}
+

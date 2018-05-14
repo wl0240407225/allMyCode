@@ -1,0 +1,24 @@
+package com.yaDsp.model.standard.request;
+
+public class Native {
+ 
+ 
+	
+	private String templateID;
+	private String imgNum;
+	public String getTemplateID() {
+		return templateID;
+	}
+	public void setTemplateID(String templateID) {
+		this.templateID = templateID;
+	}
+	public String getImgNum() {
+		return imgNum;
+	}
+	public void setImgNum(String imgNum) {
+		this.imgNum = imgNum;
+	}
+	
+	
+
+}

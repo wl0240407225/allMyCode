@@ -1,0 +1,41 @@
+package com.yaDsp.strategy.impl;
+
+import java.util.List;
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.model.standard.request.BidRequest;
+import com.yaDsp.strategy.PriorityStrategy;
+
+ 
+ 
+/**
+ * CPC竞价的，获取CTR，并折算出CPM
+ * cpm = price * ctr * 0.9 * 1000; price是单次click价格; 0.9是经验�??
+ * 
+ * @author wangyufeng
+ *
+ */
+ 
+public class CTRStrategy   implements PriorityStrategy {
+ 
+	@Override
+	public List<Ad> execute(BidRequest request, List<Ad> ads) {
+		if(ads != null && ads.size() > 1)
+		{
+			ads.forEach(x->{
+				if(x.adgroup.getBid_type() == 2){
+					x.strategy_ext_ctr = 0.001;     //CtrProvider.getCtr(request, x);
+				}
+			}); 
+		}
+		return ads;		 
+	}
+
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return "ImpBalance";
+	}
+
+	
+
+}

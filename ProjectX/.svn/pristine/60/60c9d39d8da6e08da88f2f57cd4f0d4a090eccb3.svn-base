@@ -1,0 +1,18 @@
+package com.yaDsp.material.model;
+
+public class PoiData {
+	String id;
+	PoiLocation location;
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public PoiLocation getLocation() {
+		return location;
+	}
+	public void setLocation(PoiLocation location) {
+		this.location = location;
+	}
+}

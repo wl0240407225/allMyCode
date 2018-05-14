@@ -1,0 +1,19 @@
+package com.yaDsp.model.zplay.request;
+
+public enum ZpPos {
+    UNKNOWN,
+
+    ABOVE_THE_FOLD,
+
+    DEPRECATED_LIKELY_BELOW_THE_FOLD,
+
+    BELOW_THE_FOLD,
+
+    HEADER,
+
+    FOOTER,
+
+    SIDEBAR,
+
+    AD_POSITION_FULLSCREEN
+}

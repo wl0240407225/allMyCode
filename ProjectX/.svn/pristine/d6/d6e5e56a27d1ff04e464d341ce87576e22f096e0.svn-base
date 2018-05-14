@@ -1,0 +1,34 @@
+package com.yaDsp.strategy.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.model.standard.request.BidRequest;
+import com.yaDsp.strategy.FilterStrategy;
+ 
+
+ 
+public class PriorityControlStrategy   implements FilterStrategy {
+
+	@Override
+	public List<Ad> execute(BidRequest request, List<Ad> ads) {
+		List<Ad> result=new ArrayList<Ad>();
+		if(ads != null && ads.size() > 0){
+
+			Ad ad = ads.stream().min((x,y)->x.campaign.getPriotiry() - y.campaign.getPriotiry()).get(); 
+			result = ads.stream().filter(x->x.campaign.getPriotiry() == ad.campaign.getPriotiry()).collect(Collectors.toList());
+		} 
+		return result;		 
+	}
+
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return "PriorityControl";
+	}
+
+	
+
+}

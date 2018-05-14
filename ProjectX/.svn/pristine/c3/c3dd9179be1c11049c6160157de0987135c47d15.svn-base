@@ -1,0 +1,8 @@
+0000000000000000000000000000000000000000 fa8aa7917bd9fc81c848c7e41041a05c1f93b227 aide <aide@qq.com> 1516877651 +0800	clone: from https://gitlab.com/bestdsp-plus/engines/yaDSP.git
+fa8aa7917bd9fc81c848c7e41041a05c1f93b227 f61d14b730ce8b28cc84ee43ffcfe2f1b32c1688 aide <aide@qq.com> 1517815694 +0800	commit: 对接之行DSP，包含：bid入口，request，response
+f61d14b730ce8b28cc84ee43ffcfe2f1b32c1688 0029d0052c7f0f3ca92262fb371bb6e24ce95195 aide <aide@qq.com> 1521105728 +0800	commit: V1.0 Zplay代码开发完成
+0029d0052c7f0f3ca92262fb371bb6e24ce95195 88d6f9a861be756349ec5af2ca1434a02a3138f3 aide <aide@qq.com> 1521182891 +0800	commit: 对接代码补充提交
+88d6f9a861be756349ec5af2ca1434a02a3138f3 9f9e163ce9dd9c16226992e3bcb02798f9924239 aide <aide@qq.com> 1521183523 +0800	commit: 修改：zplay sspid 设置为 2
+9f9e163ce9dd9c16226992e3bcb02798f9924239 1cd8eb5de3451f38beeb12b1e6eb12ec225cea94 aide <aide@qq.com> 1521183850 +0800	commit: 注释：req.setSsp_id("1");
+1cd8eb5de3451f38beeb12b1e6eb12ec225cea94 54eb9ea017b2318ba520321f903e85fc160bae64 aide <aide@qq.com> 1521280746 +0800	commit: 修改：imp log采用明文价格作为最终成交价格
+54eb9ea017b2318ba520321f903e85fc160bae64 61344eb55d80fab92f84ce56274400e0538c7b13 aide <aide@qq.com> 1521425656 +0800	commit: 删除：去掉写win日志的代码

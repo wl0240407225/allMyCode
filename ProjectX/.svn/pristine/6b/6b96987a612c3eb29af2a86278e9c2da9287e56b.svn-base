@@ -1,0 +1,140 @@
+package com.yaDsp.material.model;
+
+import java.util.List;
+
+public class Account {
+	
+	int account_id;
+	
+	int advertiser_id;
+
+	/*
+	 * 黑名单
+	 */
+	BlackList blackList;
+	
+	public BlackList getBlackList() {
+		return blackList;
+	}
+
+	public void setBlackList(BlackList blackList) {
+		this.blackList = blackList;
+	}
+
+	/**
+	 * 账户余额  以分为单位
+	 */
+	int amount;
+
+	/**
+	 * 虚拟金额 以分为单位
+	 */
+	int virtual_amount;
+	
+	/**
+	 * （PC用URL）黑名单列表
+	 */
+	List<String> blackUrlList;
+	
+	/**
+	 * （Mobi用DeviceId）黑名单列表
+	 */
+	List<String> blackIdList;
+
+	/**
+	 * 平台ID（30：投放平台；42：自留地）
+	 */
+	int app_id;
+
+	/**
+	 * 账户状态（1：启用；2：禁用；3：归档；4：待激活；5：待审核；6：审核未通过）
+	 */
+	short status;
+
+	/**
+	 * 记录更新的小时数据时间
+	 */
+	int hourly_data_time;
+	
+	String seat_id;
+
+	public List<String> getBlackUrlList() {
+		return blackUrlList;
+	}
+
+	public void setBlackUrlList(List<String> blackUrlList) {
+		this.blackUrlList = blackUrlList;
+	}
+
+	public List<String> getBlackIdList() {
+		return blackIdList;
+	}
+
+	public void setBlackIdList(List<String> blackIdList) {
+		this.blackIdList = blackIdList;
+	}
+
+	public int getAccount_id() {
+		return account_id;
+	}
+
+	public void setAccount_id(int account_id) {
+		this.account_id = account_id;
+	}
+
+	public int getAdvertiser_id() {
+		return advertiser_id;
+	}
+
+	public void setAdvertiser_id(int advertiser_id) {
+		this.advertiser_id = advertiser_id;
+	}
+
+	public int getAmount() {
+		return amount;
+	}
+
+	public void setAmount(int amount) {
+		this.amount = amount;
+	}
+
+	public int getVirtual_amount() {
+		return virtual_amount;
+	}
+
+	public void setVirtual_amount(int virtual_amount) {
+		this.virtual_amount = virtual_amount;
+	}
+
+	public int getApp_id() {
+		return app_id;
+	}
+
+	public void setApp_id(int app_id) {
+		this.app_id = app_id;
+	}
+
+	public short getStatus() {
+		return status;
+	}
+
+	public void setStatus(short status) {
+		this.status = status;
+	}
+
+	public int getHourly_data_time() {
+		return hourly_data_time;
+	}
+
+	public void setHourly_data_time(int hourly_data_time) {
+		this.hourly_data_time = hourly_data_time;
+	}
+
+	public String getSeat_id() {
+		return seat_id;
+	}
+
+	public void setSeat_id(String seat_id) {
+		this.seat_id = seat_id;
+	}
+}

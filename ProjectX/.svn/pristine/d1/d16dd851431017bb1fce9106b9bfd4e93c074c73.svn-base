@@ -1,0 +1,17 @@
+package com.yaDsp.material.model;
+
+public class BudgetControl {
+	/**
+	 * 预算控制类型
+	 * 0：不限预算，1：日控量，2：周期控量， 3：日控量+周期控量
+	 */
+	public int ControlType;
+	/**
+	 * 日预算
+	 */
+	public int DialyBudget;
+	/**
+	 * 周期总预算
+	 */
+	public int TotalBudget;
+}

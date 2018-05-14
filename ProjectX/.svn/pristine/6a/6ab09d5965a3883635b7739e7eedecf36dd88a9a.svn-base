@@ -1,0 +1,118 @@
+package com.yaDsp.material;
+import com.yaDsp.material.model.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+ 
+
+public class CampaignServiceImpl  {
+
+	private static HashMap<Integer, Campaign> campaignTable = new HashMap<Integer, Campaign>();
+	
+ 	private static HashMap<Integer, List<Integer>> mappingIdTable = new HashMap<Integer, List<Integer>>();
+	
+	private ReentrantReadWriteLock rw1 = new ReentrantReadWriteLock();
+	 
+	public List<Integer> updateCampaign(List<Campaign> campaigns) {
+		rw1.writeLock().lock();
+
+		List<Integer> result = new ArrayList<Integer>();
+		
+		for (Campaign campaign : campaigns) {
+
+			try {
+				campaignTable.put(campaign.getCampaign_id(), campaign);
+				 
+				List<Integer> campaignIds = mappingIdTable.getOrDefault(campaign.getAccount_id(), 
+						new ArrayList<Integer>());
+						
+				if(!campaignIds.contains(campaign.getCampaign_id()))
+				{
+					campaignIds.add(campaign.getCampaign_id());
+					mappingIdTable.put(campaign.getAccount_id(), campaignIds);
+				}
+			} catch (Exception e) {
+				result.add(campaign.getCampaign_id());
+			}
+		}
+
+		rw1.writeLock().unlock();
+
+		return result;
+	}
+
+ 
+	public List<Integer> deleteCampaign(List<Integer> campaignIds) {
+		rw1.writeLock().lock();
+
+		List<Integer> result = new ArrayList<Integer>();
+
+		for (Integer campaignId : campaignIds) {
+
+			try {
+				if (campaignTable.containsKey(campaignId)) {
+					
+					//移除mappingIdTable中存在的campaignId
+					Campaign campaign = campaignTable.get(campaignId);
+					
+					List<Integer> campaignIdList = mappingIdTable.getOrDefault(campaign.getAccount_id(), 
+							new ArrayList<Integer>());
+					
+					campaignIdList.remove(campaignId);
+					mappingIdTable.put(campaign.getAccount_id(), campaignIdList);
+					
+					campaignTable.remove(campaignId);
+					
+				}
+			} catch (Exception e) {
+				result.add(campaignId);
+			}
+		}
+
+		rw1.writeLock().unlock();
+
+		return result;
+	}
+
+ 
+	public HashMap<Integer, Campaign> getCampaign(List<Integer> campaignIds) {
+		rw1.readLock().lock();
+
+		HashMap<Integer, Campaign> result = new HashMap<Integer, Campaign>();
+
+		for (Integer campaignId : campaignIds) {
+			if (campaignTable.containsKey(campaignId)) {
+				result.put(campaignId, campaignTable.get(campaignId));
+			}
+		}
+
+		rw1.readLock().unlock();
+
+		return result;
+	}
+
+	public Campaign getCampaign(int campaignId) {
+		rw1.readLock().lock();
+
+		Campaign result = new Campaign();
+
+		if (campaignTable.containsKey(campaignId)) {
+			result = campaignTable.get(campaignId);
+		}
+
+		rw1.readLock().unlock();
+
+		return result;
+	}
+	
+ 
+	public HashMap<Integer, Campaign> getAllCampaign() {
+		return campaignTable;
+	}
+
+	 
+	public HashMap<Integer, List<Integer>> getMappingIdTable() {
+		return mappingIdTable;
+	}
+}

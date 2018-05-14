@@ -1,0 +1,22 @@
+package com.yaDsp.model.zplay.request;
+
+public class ZpBidRequestExt {
+    private int version;
+    private boolean need_https;
+
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
+    public boolean isNeed_https() {
+        return need_https;
+    }
+
+    public void setNeed_https(boolean need_https) {
+        this.need_https = need_https;
+    }
+}

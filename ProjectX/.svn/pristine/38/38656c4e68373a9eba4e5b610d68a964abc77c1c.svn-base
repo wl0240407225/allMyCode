@@ -1,0 +1,98 @@
+package com.yaDsp.trc;
+
+public class TrcModel {
+	
+	private String act;
+	private String Id;
+	private String creativeId;
+	private String adgroupId;
+	private String campaignId;
+	private String deviceId;
+	private String sspId;
+	private String appId;
+	private String slottoken;
+	private String bidPrice;
+	private String IP;
+	private String realIP;
+	private int decryptedPrice;
+	
+	public int getDecryptedPrice() {
+		return decryptedPrice;
+	}
+	public void setDecryptedPrice(int decryptedPrice) {
+		this.decryptedPrice = decryptedPrice;
+	}
+	public String getRealIP() {
+		return realIP;
+	}
+	public void setRealIP(String realIP) {
+		this.realIP = realIP;
+	}
+	public String getAct() {
+		return act;
+	}
+	public void setAct(String act) {
+		this.act = act;
+	}
+	public String getId() {
+		return Id;
+	}
+	public void setId(String id) {
+		Id = id;
+	}
+	public String getCreativeId() {
+		return creativeId;
+	}
+	public void setCreativeId(String creativeId) {
+		this.creativeId = creativeId;
+	}
+	public String getAdgroupId() {
+		return adgroupId;
+	}
+	public void setAdgroupId(String adgroupId) {
+		this.adgroupId = adgroupId;
+	}
+	public String getCampaignId() {
+		return campaignId;
+	}
+	public void setCampaignId(String campaignId) {
+		this.campaignId = campaignId;
+	}
+	public String getDeviceId() {
+		return deviceId;
+	}
+	public void setDeviceId(String deviceId) {
+		this.deviceId = deviceId;
+	}
+	public String getSspId() {
+		return sspId;
+	}
+	public void setSspId(String sspId) {
+		this.sspId = sspId;
+	}
+	public String getAppId() {
+		return appId;
+	}
+	public void setAppId(String appId) {
+		this.appId = appId;
+	}
+	public String getSlottoken() {
+		return slottoken;
+	}
+	public void setSlottoken(String slottoken) {
+		this.slottoken = slottoken;
+	}
+	public String getBidPrice() {
+		return bidPrice;
+	}
+	public void setBidPrice(String bidPrice) {
+		this.bidPrice = bidPrice;
+	}
+	public String getIP() {
+		return IP;
+	}
+	public void setIP(String iP) {
+		IP = iP;
+	}
+
+}

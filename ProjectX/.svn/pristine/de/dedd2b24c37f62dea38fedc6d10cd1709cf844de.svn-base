@@ -1,0 +1,22 @@
+package com.yaDsp.model.standard.response;
+
+public class RespAssetData {
+    private int id;
+    private RespNativeData data;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public RespNativeData getData() {
+        return data;
+    }
+
+    public void setData(RespNativeData data) {
+        this.data = data;
+    }
+}

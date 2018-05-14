@@ -1,0 +1,12 @@
+package com.yaDsp.model.zplay.request;
+
+public enum ZpDeviceType {
+    ZERO,
+    MOBILE,
+    PERSONAL_COMPUTER,
+    CONNECTED_TV,
+    PHONE,
+    TABLET,
+    CONNECTED_DEVICE,
+    SET_TOP_BOX
+}

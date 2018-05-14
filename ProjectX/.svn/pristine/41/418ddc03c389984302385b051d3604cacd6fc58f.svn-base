@@ -1,0 +1,48 @@
+package com.yaDsp.material.model;
+
+public class PoiLocation {
+	String lat;
+	String lng;
+	
+	public String getLat() {
+		return lat;
+	}
+	public void setLat(String lat) {
+		this.lat = lat;
+	}
+	public String getLng() {
+		return lng;
+	}
+	public void setLng(String lng) {
+		this.lng = lng;
+	}
+	
+	double yb;
+	double ye;
+	double xb;
+	double xe;
+	public double getYb() {
+		return yb;
+	}
+	public void setYb(double yb) {
+		this.yb = yb;
+	}
+	public double getYe() {
+		return ye;
+	}
+	public void setYe(double ye) {
+		this.ye = ye;
+	}
+	public double getXb() {
+		return xb;
+	}
+	public void setXb(double xb) {
+		this.xb = xb;
+	}
+	public double getXe() {
+		return xe;
+	}
+	public void setXe(double xe) {
+		this.xe = xe;
+	}
+}

@@ -1,0 +1,189 @@
+package com.yaDsp.engine.selector;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import com.alibaba.fastjson.JSON;
+import com.yaDsp.model.standard.request.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.material.*;
+import com.yaDsp.material.model.*;
+import com.yaDsp.util.ListUtil;
+
+public class CreativeUnitFilter {
+	
+	private static Logger logger = LoggerFactory.getLogger(CreativeUnitFilter.class);
+	
+	//private static boolean isDebugEnabled = logger.isDebugEnabled();
+	
+	public static List<Integer> iterateFilter(BidRequest request, List<Integer> adgroupIds)
+	{
+		List<Integer> result = new ArrayList<Integer>();
+		if (adgroupIds.size() == 0) {
+			return result;
+		}
+		
+		boolean isDebug=request.isDebug();
+		
+		CreativeUnitServiceImpl creativeUnitService = new CreativeUnitServiceImpl();
+
+		// 根据adgroupIds，获取对应的creativeUnitIdList
+		List<Integer> creativeUnitIds = getFilteredCreativeUnitIds(creativeUnitService, adgroupIds,isDebug);
+		
+		if(isDebug)
+		{
+			logger.debug("筛选前 creativeUnitId:" + ListUtil.intListToString(creativeUnitIds));
+		}
+		
+		
+		HashMap<Integer, CreativeUnit> creativeTable = creativeUnitService.getCreativeUnit(creativeUnitIds);
+		
+		creativeTable.forEach((creativeId, creativeUnit) -> {
+			if (judgeOsType(request, creativeUnit,isDebug)
+					&& judgeNativeRequire(request, creativeUnit,isDebug)) {
+				result.add(creativeUnit.getCreative_unit_id());
+			}
+		});
+		
+		if(isDebug)
+		{
+			logger.debug("筛选后 creativeUnitId:" + ListUtil.intListToString(result));
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 根据adgroupIds，获取对应的creativeUnitIdList
+	 * 
+	 * @param creativeUnitService
+	 * @param adgroupIds
+	 * @return
+	 */
+	private static List<Integer> getFilteredCreativeUnitIds(CreativeUnitServiceImpl creativeUnitService, List<Integer> adgroupIds,boolean isDebug)
+	{
+		List<Integer> result = new ArrayList<Integer>();
+
+		HashMap<Integer, List<Integer>> mappingIdTable = creativeUnitService.getMappingIdTable();
+
+		mappingIdTable.forEach((adgroupId, creativeUnitIds) -> {
+			if (adgroupIds.contains(adgroupId)) {
+				result.addAll(creativeUnitIds);
+				
+				if(isDebug)
+				{
+					logger.debug(String.format("adgroupId(creativeUnitId): %d(%s)", adgroupId, ListUtil.intListToString(creativeUnitIds)));
+				}
+			}
+		});
+
+		return result;
+	}
+	
+	/**
+	 *  judget banner splash native ?
+	 * @param request
+	 * @param creativeUnit
+	 * @return
+	 */
+	private static boolean judgeCreativeType(BidRequest request,CreativeUnit creativeUnit,boolean isDebug)
+	{
+		boolean result = false;
+		int actual=0;
+		if(request.getImp().get(0).getNativeObject()!=null && creativeUnit.getDisplaytype_id()==8) {
+			actual=8;
+			result=true;
+		}else if(request.getImp().get(0).getNativeObject()==null&&creativeUnit.getDisplaytype_id()<4) {
+			actual=1;
+			result=true;
+		}
+			
+ 
+		
+		if (!result && isDebug) {
+			logger.debug(String.format("After Creative Type: creativeUnitId:%d\tDB.Creative_type:%d\trequest.banner.Type:%s", 
+					creativeUnit.getCreative_unit_id(),
+					creativeUnit.getCreative_type(),
+					actual));
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 判断系统类型
+	 * @param request
+	 * @param creativeUnit
+	 * @return
+	 */
+	private static boolean judgeOsType(BidRequest request,CreativeUnit creativeUnit,boolean isDebug)
+	{
+		boolean result = false;
+		
+		Device device = request.getDevice();
+		
+		if (device.getOs() == creativeUnit.getOs_type()+1) {
+			
+			result = true;
+		}
+		
+		if (!result && isDebug) {
+			logger.debug(String.format("系统类型 creativeUnitId:%d\tDB.Os_type:%d\trequest.device.os:%d", 
+					creativeUnit.getCreative_unit_id(),
+					creativeUnit.getOs_type()+1,
+					device.getOs()));
+		}
+		
+		return result;
+	}
+
+	/**
+	 * 判断原生广告要求
+	 * @param request
+	 * @param creativeUnit
+	 * @return
+	 */
+	private static boolean judgeNativeRequire(BidRequest request,CreativeUnit creativeUnit,boolean isDebug)
+	{
+		boolean result = false;
+
+		ReqNative nativeRequest = request.getImp().get(0).getNativeRequest();
+
+		List<ReqNativeAsset> assets = nativeRequest.getAssets();
+
+		for(ReqNativeAsset asset : assets){
+
+			if (!asset.isRequired()){
+				//如果不是必须项，则忽略
+				continue;
+			}
+
+			HashMap<String,HashMap<String,Integer>> assetOneof = asset.getAssetOneof();
+
+			AdContent adContent = creativeUnit.getAdContent();
+
+			if(assetOneof.containsKey("Title")){
+				HashMap<String,Integer> assetTitle = assetOneof.get("Title");
+				if (adContent.getTitle().length() <assetTitle.get("len")) {
+					result = true;
+				}
+			}else if (assetOneof.containsKey("Data")){
+				HashMap<String,Integer> assetData = assetOneof.get("Data");
+				if (assetData.get("type") == 2
+						&& adContent.getDesc().length() < assetData.get("len")) {
+					result = true;
+				}
+			}
+		}
+
+		if (!result && isDebug) {
+			logger.debug("创意物料信息："+ creativeUnit.getAdContentJson());
+			logger.debug("ADX原生广告请求信息："+ JSON.toJSONString(assets));
+		}
+
+		return result;
+	}
+}

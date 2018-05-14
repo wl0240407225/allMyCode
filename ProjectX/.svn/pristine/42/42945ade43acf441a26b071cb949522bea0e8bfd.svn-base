@@ -1,0 +1,229 @@
+package com.yaDsp.material.model;
+
+import java.util.Date;
+
+public class Campaign {
+
+	int campaign_id;
+	
+	int account_id;
+	
+	short is_atd;
+	
+	short is_limit_budget;
+
+	/**
+	 * 优先级，1-10; 1最高，默认10
+	 */
+	short priotiry;
+
+	/**
+	 * 优先级，1-10; 1最高，默认10
+	 */
+	public short getPriotiry() {
+		return priotiry;
+	}
+	/**
+	 * 优先级，1-10; 1最高，默认10
+	 */
+	public void setPriotiry(short priotiry) {
+		this.priotiry = priotiry;
+	}
+
+	/**
+	 * 是否是匀速投放（0：不是，1：是）
+	 */
+	short is_speed_launch;
+
+ 
+	/**
+	 * DE控量每日预算
+	 */
+	BudgetControl daily_budget_de;
+	
+ 
+	
+	/**
+	 * 点击控量
+	 */
+	AmountControl cli_control;
+	
+	 
+	
+	/**
+	 * 展示控量
+	 */
+	AmountControl imp_control;
+
+
+
+	/**
+	 * 广告活动开始时间
+	 */
+	Date start_date;
+	
+	/**
+	 * 广告活动结束时间,null代表结束时间
+	 */
+	Date end_date;
+
+	/**
+	 * 排除投放周期 新字段
+	 */
+	ExcludeCycle excludeCycle;
+	
+	/**
+	 * 频次控制[daily:;dd]
+	 */
+	FrequencyControl frequencycap;
+
+	/**
+	 * 广告活动状态
+	 */
+	short status;
+
+	/**
+	 * 被复制的广告活动id，只有复制时才用到
+	 */
+	int copy_from;
+	
+	/**
+	 * 对接产品的id
+	 */
+	int docking_product_id;
+	
+	String seat_id;
+	
+
+	public ExcludeCycle getExcludeCycle() {
+		return excludeCycle;
+	}
+
+	public void setExcludeCycle(ExcludeCycle excludeCycle) {
+		this.excludeCycle = excludeCycle;
+	}
+
+	public int getCampaign_id() {
+		return campaign_id;
+	}
+
+	public void setCampaign_id(int campaign_id) {
+		this.campaign_id = campaign_id;
+	}
+
+	public int getAccount_id() {
+		return account_id;
+	}
+
+	public void setAccount_id(int account_id) {
+		this.account_id = account_id;
+	}
+
+	public short getIs_atd() {
+		return is_atd;
+	}
+
+	public void setIs_atd(short is_atd) {
+		this.is_atd = is_atd;
+	}
+
+	public short getIs_limit_budget() {
+		return is_limit_budget;
+	}
+
+	public void setIs_limit_budget(short is_limit_budget) {
+		this.is_limit_budget = is_limit_budget;
+	}
+
+	public short getIs_speed_launch() {
+		return is_speed_launch;
+	}
+
+	public void setIs_speed_launch(short is_speed_launch) {
+		this.is_speed_launch = is_speed_launch;
+	}
+
+	public BudgetControl getDaily_budget_de() {
+		return daily_budget_de;
+	}
+
+	public void setDaily_budget_de(BudgetControl daily_budget_de) {
+		this.daily_budget_de = daily_budget_de;
+	}
+
+ 
+
+	public AmountControl getCli_control() {
+		return cli_control;
+	}
+
+	public void setCli_control(AmountControl cli_control) {
+		this.cli_control = cli_control;
+	}
+ 
+	public AmountControl getImp_control() {
+		return imp_control;
+	}
+
+	public void setImp_control(AmountControl imp_control) {
+		this.imp_control = imp_control;
+	}
+
+	public Date getStart_date() {
+		return start_date;
+	}
+
+	public void setStart_date(Date start_date) {
+		this.start_date = start_date;
+	}
+
+	public Date getEnd_date() {
+		return end_date;
+	}
+
+	public void setEnd_date(Date end_date) {
+		this.end_date = end_date;
+	}
+
+	public FrequencyControl getFrequencycap() {
+		return frequencycap;
+	}
+
+	public void setFrequencycap(FrequencyControl frequencycap) {
+		this.frequencycap = frequencycap;
+	}
+
+	public short getStatus() {
+		return status;
+	}
+
+	public void setStatus(short status) {
+		this.status = status;
+	}
+
+	public int getCopy_from() {
+		return copy_from;
+	}
+
+	public void setCopy_from(int copy_from) {
+		this.copy_from = copy_from;
+	}
+
+	public int getDocking_product_id() {
+		return docking_product_id;
+	}
+
+	public void setDocking_product_id(int docking_product_id) {
+		this.docking_product_id = docking_product_id;
+	}
+
+
+
+	public String getSeat_id() {
+		return seat_id;
+	}
+
+	public void setSeat_id(String seat_id) {
+		this.seat_id = seat_id;
+	}
+}

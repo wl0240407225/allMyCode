@@ -1,0 +1,93 @@
+package com.yaDsp.material;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import com.yaDsp.material.model.*;
+
+public class AccountServiceImpl {
+
+	private static HashMap<Integer, Account> accountTable = new HashMap<Integer, Account>();
+	private ReentrantReadWriteLock rw1 = new ReentrantReadWriteLock();
+	
+	public List<Integer> updateAccount(List<Account> accounts) {
+		rw1.writeLock().lock();
+
+		List<Integer> result = new ArrayList<Integer>();
+
+		for (Account account : accounts) {
+
+			try {
+				accountTable.put(account.getAccount_id(), account);
+			} catch (Exception e) {
+				result.add(account.getAccount_id());
+			}
+		}
+
+		rw1.writeLock().unlock();
+
+		return result;
+	}
+
+	 
+	public List<Integer> deleteAccount(List<Integer> accountIds) {
+		rw1.writeLock().lock();
+
+		List<Integer> result = new ArrayList<Integer>();
+
+		for (Integer accountId : accountIds) {
+
+			try {
+				if (accountTable.containsKey(accountId)) {
+					accountTable.remove(accountId);
+				}
+			} catch (Exception e) {
+				result.add(accountId);
+			}
+		}
+
+		rw1.writeLock().unlock();
+
+		return result;
+	}
+
+	 
+	public HashMap<Integer, Account> getAccount(List<Integer> accountIds) {
+		rw1.readLock().lock();
+
+		HashMap<Integer, Account> result = new HashMap<Integer, Account>();
+
+		for (Integer accountId : accountIds) {
+			if (accountTable.containsKey(accountId)) {
+				result.put(accountId, accountTable.get(accountId));
+			}
+		}
+
+		rw1.readLock().unlock();
+
+		return result;
+	}
+
+	public Account getAccount(int accountId) {
+		rw1.readLock().lock();
+
+		Account result = new Account();
+
+		if (accountTable.containsKey(accountId)) {
+			result = accountTable.get(accountId);
+		}
+
+		rw1.readLock().unlock();
+
+		return result;
+	}
+	
+ 
+	public HashMap<Integer, Account> getAllAccount() {
+		return accountTable;
+	}
+
+
+}

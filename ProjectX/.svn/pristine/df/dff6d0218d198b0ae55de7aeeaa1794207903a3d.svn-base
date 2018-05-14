@@ -1,0 +1,227 @@
+/**
+
+ * Copyright (C), 2006-2010, ChengDu Lovo info. Co., Ltd.
+
+ * FileName: ZhiXingBid.java
+
+ * 之行传媒DSP对接
+
+ *
+
+ * @author  xuyingpeng
+ * @Date    2018-01-29
+
+ * @version 1.00
+
+ */
+package com.yaDsp.handler;
+
+import com.alibaba.fastjson.JSON;
+import com.yaDsp.engine.DspEngine;
+import com.yaDsp.logger.LogSystem;
+import com.yaDsp.model.standard.request.*;
+import com.yaDsp.model.standard.response.Bid;
+import com.yaDsp.model.standard.response.BidResponse;
+import com.yaDsp.model.zhixing.*;
+
+import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+public class ZhiXingBid extends HttpServlet {
+
+    private static final long serialVersionUID = -2539574908246812089L;
+
+    static DspEngine engine = new DspEngine();
+
+    protected void doPost(HttpServletRequest baseRequest,
+                          HttpServletResponse response) throws ServletException, IOException {
+
+        BufferedReader br = new BufferedReader(new InputStreamReader((ServletInputStream) baseRequest.getInputStream()
+                , "utf-8"));
+        StringBuffer sb = new StringBuffer("");
+        String temp;
+        while ((temp = br.readLine()) != null) {
+            sb.append(temp);
+        }
+        br.close();
+        temp=sb.toString();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss");
+        Object[] item = new Object[] { dateFormat.format(new Date()),// 0:时间
+                temp// 1:原始请求
+        };
+
+        LogSystem.writeLog("rawresponse", item);
+
+        ZxBidRequest zxReq = JSON
+                .parseObject(temp, ZxBidRequest.class);
+
+        BidRequest stdReq = ConvertToStdReq(zxReq);
+
+        BidResponse stdResp=engine.doBid(stdReq);
+
+        ZxBidResponse zxResp= ConvertToZxResponse(stdResp);
+
+        String str = JSON.toJSONString(zxResp);
+
+        response.setHeader("content-type", "application/json;charset=utf-8");
+
+        response.getWriter().write(str);
+    }
+
+    private BidRequest ConvertToStdReq(ZxBidRequest zxReq)
+    {
+        BidRequest result = new BidRequest();
+
+        if (zxReq == null)
+        {
+            return  result;
+        }
+
+        result.setId(zxReq.getId());
+
+        List<ZxImp> zxImps = zxReq.getImp();
+        List<Imp> imps = new ArrayList<Imp>();
+
+        for (ZxImp zxImp :  zxImps) {
+            Imp imp = new Imp();
+            imp.setId(zxImp.getId());
+
+            Native stdNative = new Native();
+            stdNative.setTemplateID(String.valueOf(zxImp.getNativeinfo().getTemplateID()));
+
+            imp.setNativeObject(stdNative);
+            imp.setBidfloor(zxImp.getBidfloor());
+            imps.add(imp);
+        }
+
+        result.setImp(imps);
+
+        App app = new App();
+
+        ZxApp zxApp = zxReq.getApp();
+        if (zxApp != null)
+        {
+            app.setId(zxApp.getId());
+            app.setName(zxApp.getName());
+            //todo
+            app.setSspId("todo");
+            app.setBundleId(zxApp.getBundle());
+        }
+
+        result.setApp(app);
+
+        Device device = new Device();
+
+        ZxDevice zxDevice = zxReq.getDevice();
+
+        ZxGeo zxGeo = zxReq.getGeo();
+
+        Geo geo = new Geo();
+
+        if (zxGeo != null) {
+            geo.setLon(zxGeo.getLon());
+
+            geo.setLat(zxGeo.getLat());
+        }
+
+        if (zxDevice != null)
+        {
+            device.setUa(zxDevice.getUa());
+            device.setGeo(geo);
+
+            device.setIp(zxDevice.getIp());
+            device.setModel(zxDevice.getModel());
+
+            if ("Android".equals(zxDevice.getOs())) {
+                device.setOs((short)2);
+            } else if ("iOS".equals(zxDevice.getOs())) {
+                device.setOs((short)1);
+            } else
+            {
+                //UnKnown
+                device.setOs((short)0);
+            }
+
+            device.setIfa(zxDevice.getIdfa());
+            device.setImei(zxDevice.getImeiplain());
+            device.setDidmd5(zxDevice.getImeimd5());
+        }
+
+        result.setDevice(device);
+
+        //todo
+        result.setSsp_id("");
+        result.setSsp_token("");
+
+        //todo
+        List<String> pdb = new ArrayList<String>();
+
+        result.setPdb(pdb);
+
+        User user = new User();
+
+        ZxUser zxUser = zxReq.getUser();
+
+        if (zxUser != null)
+        {
+            user.setUserId(zxUser.getId());
+        }
+
+        result.setUser(user);
+
+        return  result;
+    }
+
+    private ZxBidResponse ConvertToZxResponse(BidResponse stdResp)
+    {
+        ZxBidResponse result = new ZxBidResponse();
+
+        result.setId(stdResp.getId());
+
+        List<ZxBid> seatbids = new ArrayList<ZxBid>();
+
+        List<Bid> bids = stdResp.getBids();
+        for (Bid bid : bids)
+        {
+            ZxBid zxBid = new ZxBid();
+
+            //todo
+            zxBid.setId(bid.getImpID());
+
+            zxBid.setImpid(bid.getImpID());
+
+            zxBid.setPrice((int)bid.getPrice());
+
+            //todo
+            //zxBid.setCur("");
+
+            zxBid.setCreativeid(bid.getCreativeId());
+
+            zxBid.setPm(bid.getImpTracking());
+
+            zxBid.setCm(bid.getClkTracking());
+
+            zxBid.setLp(bid.getLpg());
+
+            seatbids.add(zxBid);
+        }
+
+        result.setSeatbid(seatbids);
+
+        result.setBidid(stdResp.getId());
+
+        return  result;
+    }
+}

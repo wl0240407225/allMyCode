@@ -1,0 +1,116 @@
+package com.yaDsp.strategy;
+ 
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.model.standard.request.BidRequest;
+
+ 
+
+public class GroupStrategy implements Strategy {
+
+	private static Logger logger = LoggerFactory.getLogger(GroupStrategy.class);
+	
+	@Override
+	public List<Ad> execute(BidRequest request, List<Ad> ads) 
+	{
+		try
+		{
+			if(ads!=null && ads.size()>0)
+			{
+				List<Ad> filtered=ads;
+				for(FilterStrategy s:this.filter){
+					if(request.isDebug())
+					{
+						List<String> idstr = filtered.stream().map(i -> Long.toString(i.creativeId))
+								.collect(Collectors.toList());
+						String p = String.join(",", idstr);
+	
+						logger.debug(s.getName() + "----------"+p);
+					}
+					filtered=s.execute(request,filtered);
+					if(request.isDebug())
+					{
+						List<String> idstr = filtered.stream().map(i -> Long.toString(i.creativeId))
+								.collect(Collectors.toList());
+						String p = String.join(",", idstr);
+	
+						logger.debug(s.getName() + "----------"+p);
+					}
+				}
+				
+				if(filtered!= null && filtered.size()>0)
+				{
+					for(PriorityStrategy s:priority){ 
+							filtered=s.execute(request,filtered); 
+					}
+				}
+				
+				if(filtered!= null &&  filtered.size()>0)
+				{
+					for(Ad ad:filtered){ 
+						ad.strategy_ext_name = this.name;
+						//ad.strategy_ext_bid_price = ad.MaxBid;
+					}
+					return filtered;
+				}
+			}
+			return null;	
+		}
+		catch(Exception ex)
+		{
+			logger.error("GroupStrategyError:",ex);
+			return null;
+		}
+	}
+
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return this.name;
+	}
+	
+	double executionRate;
+	//当有多个策略组满足条件时，此策略组被执行的概率。
+	public double getExecutionRate(){
+		return this.executionRate;
+	}
+	
+	public void setExecutionRate(double value){
+		this.executionRate=value;
+	}
+
+	//根据配置确定当前策略组是否适用于当前请求
+	public boolean isApplicable(BidRequest request){
+			return tester.test(request);
+	}
+	
+	public void setName(String name){
+		this.name=name;
+	}
+	
+	public void SetFilter(Predicate<BidRequest> tester){
+		this.tester=tester;
+	}
+	
+	public void AddStrategy(Strategy strategy){
+		if(strategy instanceof PriorityStrategy){
+			priority.add((PriorityStrategy)strategy);
+		}else{
+			filter.add((FilterStrategy)strategy);
+		}
+	}
+	
+	Predicate<BidRequest> tester;
+	List<PriorityStrategy> priority=new ArrayList<PriorityStrategy>();
+	List<FilterStrategy> filter=new ArrayList<FilterStrategy>();
+	String name;
+} 
+

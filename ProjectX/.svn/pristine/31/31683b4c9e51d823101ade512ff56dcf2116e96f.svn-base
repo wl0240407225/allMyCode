@@ -1,0 +1,22 @@
+package com.yaDsp.model.zplay.request;
+
+public class ZpGeoExt {
+    private int accu;
+    private String street;
+
+    public int getAccu() {
+        return accu;
+    }
+
+    public void setAccu(int accu) {
+        this.accu = accu;
+    }
+
+    public String getStreet() {
+        return street;
+    }
+
+    public void setStreet(String street) {
+        this.street = street;
+    }
+}

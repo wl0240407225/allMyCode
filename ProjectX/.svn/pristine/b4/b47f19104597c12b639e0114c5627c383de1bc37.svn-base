@@ -1,0 +1,25 @@
+package com.yaDsp.model.standard.request;
+
+import java.util.List;
+
+public class ReqNative {
+    //2：应用墙，3：信息流，5：走马灯
+    private int layout;
+    private List<ReqNativeAsset> assets;
+
+    public int getLayout() {
+        return layout;
+    }
+
+    public void setLayout(int layout) {
+        this.layout = layout;
+    }
+
+    public List<ReqNativeAsset> getAssets() {
+        return assets;
+    }
+
+    public void setAssets(List<ReqNativeAsset> assets) {
+        this.assets = assets;
+    }
+}

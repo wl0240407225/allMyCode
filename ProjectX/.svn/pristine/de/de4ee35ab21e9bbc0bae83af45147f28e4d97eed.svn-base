@@ -1,0 +1,40 @@
+package com.yaDsp.material.model;
+
+public class AdObjective {
+	private String content_type;
+	private short action_type;
+	private AdObjectiveIOS ios;
+	private AdObjectiveAndroid android;
+	private AdObjectiveWindows windows;
+	
+	public String getContent_type() {
+		return content_type;
+	}
+	public void setContent_type(String content_type) {
+		this.content_type = content_type;
+	}
+	public short getAction_type() {
+		return action_type;
+	}
+	public void setAction_type(short action_type) {
+		this.action_type = action_type;
+	}
+	public AdObjectiveIOS getIos() {
+		return ios;
+	}
+	public void setIos(AdObjectiveIOS ios) {
+		this.ios = ios;
+	}
+	public AdObjectiveAndroid getAndroid() {
+		return android;
+	}
+	public void setAndroid(AdObjectiveAndroid android) {
+		this.android = android;
+	}
+	public AdObjectiveWindows getWindows() {
+		return windows;
+	}
+	public void setWindows(AdObjectiveWindows windows) {
+		this.windows = windows;
+	}
+}

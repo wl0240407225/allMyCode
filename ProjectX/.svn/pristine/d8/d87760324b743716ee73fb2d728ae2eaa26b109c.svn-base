@@ -1,0 +1,14 @@
+package com.yaDsp.model.zhixing;
+
+public class ZxNative {
+
+    private int templateID;
+
+    public int getTemplateID() {
+        return templateID;
+    }
+
+    public void setTemplateID(int templateID) {
+        this.templateID = templateID;
+    }
+}

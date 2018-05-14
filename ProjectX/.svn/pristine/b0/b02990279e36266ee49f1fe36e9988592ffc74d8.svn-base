@@ -1,0 +1,88 @@
+package com.yaDsp.model.zhixing;
+
+import java.util.List;
+
+public class ZxBidRequest {
+
+    private String id;
+    private List<ZxImp> imp;
+    private ZxApp app;
+    private ZxDevice device;
+    private ZxGeo geo;
+    private ZxUser user;
+    private int test;
+    private int at;
+    private List<String> cur;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public List<ZxImp> getImp() {
+        return imp;
+    }
+
+    public void setImp(List<ZxImp> imp) {
+        this.imp = imp;
+    }
+
+    public ZxApp getApp() {
+        return app;
+    }
+
+    public void setApp(ZxApp app) {
+        this.app = app;
+    }
+
+    public ZxDevice getDevice() {
+        return device;
+    }
+
+    public void setDevice(ZxDevice device) {
+        this.device = device;
+    }
+
+    public ZxGeo getGeo() {
+        return geo;
+    }
+
+    public void setGeo(ZxGeo geo) {
+        this.geo = geo;
+    }
+
+    public ZxUser getUser() {
+        return user;
+    }
+
+    public void setUser(ZxUser user) {
+        this.user = user;
+    }
+
+    public int getTest() {
+        return test;
+    }
+
+    public void setTest(int test) {
+        this.test = test;
+    }
+
+    public int getAt() {
+        return at;
+    }
+
+    public void setAt(int at) {
+        this.at = at;
+    }
+
+    public List<String> getCur() {
+        return cur;
+    }
+
+    public void setCur(List<String> cur) {
+        this.cur = cur;
+    }
+}

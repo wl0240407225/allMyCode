@@ -1,0 +1,79 @@
+package com.yaDsp.model.zhixing;
+
+import java.util.List;
+
+public class ZxBid {
+    private  String id;
+    private  String impid;
+    private  int price;
+    private String cur;
+    private String creativeid;
+    List<String> pm;
+    List<String> cm;
+    private String lp;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getImpid() {
+        return impid;
+    }
+
+    public void setImpid(String impid) {
+        this.impid = impid;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
+    }
+
+    public String getCur() {
+        return cur;
+    }
+
+    public void setCur(String cur) {
+        this.cur = cur;
+    }
+
+    public String getCreativeid() {
+        return creativeid;
+    }
+
+    public void setCreativeid(String creativeid) {
+        this.creativeid = creativeid;
+    }
+
+    public List<String> getPm() {
+        return pm;
+    }
+
+    public void setPm(List<String> pm) {
+        this.pm = pm;
+    }
+
+    public List<String> getCm() {
+        return cm;
+    }
+
+    public void setCm(List<String> cm) {
+        this.cm = cm;
+    }
+
+    public String getLp() {
+        return lp;
+    }
+
+    public void setLp(String lp) {
+        this.lp = lp;
+    }
+}
+

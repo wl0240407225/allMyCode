@@ -1,0 +1,27 @@
+package com.yaDsp.material.model;
+
+public class Content {
+	
+	String id;
+	String name;
+	String mapping_id;
+	
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getMapping_id() {
+		return mapping_id;
+	}
+	public void setMapping_id(String mapping_id) {
+		this.mapping_id = mapping_id;
+	}
+}

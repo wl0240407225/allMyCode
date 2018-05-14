@@ -1,0 +1,133 @@
+package com.yaDsp.model.standard.request;
+
+public class NativeInfo {
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getSource() {
+		return source;
+	}
+	public void setSource(String source) {
+		this.source = source;
+	}
+	public String getDesc() {
+		return desc;
+	}
+	public void setDesc(String desc) {
+		this.desc = desc;
+	}
+	public String getClick_button_text() {
+		return click_button_text;
+	}
+	public void setClick_button_text(String click_button_text) {
+		this.click_button_text = click_button_text;
+	}
+	public String getPackage_name() {
+		return package_name;
+	}
+	public void setPackage_name(String package_name) {
+		this.package_name = package_name;
+	}
+	public String getPackage_version() {
+		return package_version;
+	}
+	public void setPackage_version(String package_version) {
+		this.package_version = package_version;
+	}
+	public String getPackage_size() {
+		return package_size;
+	}
+	public void setPackage_size(String package_size) {
+		this.package_size = package_size;
+	}
+	public Double getStar() {
+		return star;
+	}
+	public void setStar(Double star) {
+		this.star = star;
+	}
+	public Integer getComment_count() {
+		return comment_count;
+	}
+	public void setComment_count(Integer comment_count) {
+		this.comment_count = comment_count;
+	}
+	public Integer getDownload_count() {
+		return download_count;
+	}
+	public void setDownload_count(Integer download_count) {
+		this.download_count = download_count;
+	}
+	public Integer getPlay_count() {
+		return play_count;
+	}
+	public void setPlay_count(Integer play_count) {
+		this.play_count = play_count;
+	}
+ 
+	/**
+	 * 标题
+	 */
+	private String title;
+	/**
+	 * 来源
+	 */
+	private String source;
+	/**
+	 * 描述
+	 */
+	private String desc;
+	/**
+	 * 点击按钮文本
+	 */
+	private String click_button_text;
+	/**
+	 * 应用包名称
+	 */
+	private String package_name;
+	/**
+	 * 版本号
+	 */
+	private String package_version;
+	/**
+	 * 安装包大小
+	 */
+	private String package_size;
+	/**
+	 * 星级
+	 */
+	private Double star; 
+	/**
+	 * 评论人数
+	 */
+	private Integer comment_count;
+	/**
+	 * 下载次数
+	 */
+	private Integer download_count;
+	/**
+	 * 多少人玩(活跃玩家数)
+	 */
+	private Integer play_count;
+	public String getMid() {
+		return mid;
+	}
+	public String getLanding_page() {
+		return landing_page;
+	}
+	public void setLanding_page(String landing_page) {
+		this.landing_page = landing_page;
+	}
+	public void setMid(String mid) {
+		this.mid = mid;
+	}
+ 
+	/**
+	 * LPG图片
+	 */
+	private String landing_page;
+	private String mid;
+}

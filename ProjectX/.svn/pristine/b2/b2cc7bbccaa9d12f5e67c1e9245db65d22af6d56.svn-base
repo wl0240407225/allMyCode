@@ -1,0 +1,504 @@
+package com.yaDsp.strategy.impl;
+
+import java.security.MessageDigest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.material.model.FrequencyControl;
+import com.yaDsp.util.RedisUtil;
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
+
+public class FrequencyManager {
+  
+	private  RedisUtil redisUtil=new RedisUtil();
+	
+	private int daySeconds = 3600*24 *1; //按日数据expire秒数
+	private int weekSeconds = 3600*24* 7; //按周数据expire秒数
+	private int monthSeconds =3600*24 * 30;//按月数据expire秒数
+	private int totalSeconds = 3600 *24*30; //按周期的默认也按照一个月来算
+	  
+	private static Logger logger = LoggerFactory.getLogger(FrequencyManager.class);
+	
+	/**
+	 * 获取某个设备（用户）在campaign 按日展示频控信息
+	 * @param day
+	 * @param deviceId
+	 * @param campaignId
+	 * @return
+	 */
+	public int getCamDayFreq(int day, String deviceId, long campaignId) {
+		String dayKey = getCamDayKey(day, deviceId, campaignId); 
+		return redisUtil.getIntByKey(dayKey); 
+	}
+	public int getCamDayClickFreq(int day, String deviceId, long campaignId) {
+		String dayKey = getCamDayClickKey(day, deviceId, campaignId); 
+		return redisUtil.getIntByKey(dayKey); 
+	}
+	
+	/**
+	 * 获取某个设备（用户）在campaign 按周展示频控信息
+	 * @param week
+	 * @param deviceId
+	 * @param campaignId
+	 * @return
+	 */
+	public int getCamWeekFreq(int week,String deviceId, long campaignId) {
+		String weekKey = getCamWeekKey(week, deviceId, campaignId);
+		return redisUtil.getIntByKey(weekKey); 
+	}
+	public int getCamWeekClickFreq(int week,String deviceId, long campaignId) {
+		String weekKey = getCamWeekClickKey(week, deviceId, campaignId);
+		return redisUtil.getIntByKey(weekKey); 
+	}
+	/**
+	 * 获取某个设备（用户）在campaign 按月展示频控信息
+	 * @param month
+	 * @param deviceId
+	 * @param campaignId
+	 * @return
+	 */
+	public int getCamMonthFreq(int month,String deviceId, long campaignId) {
+	 
+		String monthKey = getCamMonthlyKey(month, deviceId, campaignId); 
+		return redisUtil.getIntByKey(monthKey); 
+	}
+	public int getCamMonthClickFreq(int month,String deviceId, long campaignId) {
+		 
+		String monthKey = getCamMonthClickKey(month, deviceId, campaignId); 
+		return redisUtil.getIntByKey(monthKey); 
+	}
+	/**
+	 * 获取某个设备（用户）在campaign 按周期展示频控信息
+	 * @param deviceId
+	 * @param campaignId
+	 * @return
+	 */
+	public int getCamTotalFreq( String deviceId, long campaignId) {
+		 
+		String totalKey = getCamTotalKey(deviceId, campaignId);
+		return redisUtil.getIntByKey(totalKey); 
+	}
+	public int getCamTotalClickFreq( String deviceId, long campaignId) {
+		 
+		String totalKey = getCamTotalClickKey(deviceId, campaignId);
+		return redisUtil.getIntByKey(totalKey); 
+	}
+	
+	/**
+	 * 获取某个设备（用户）在adgroup 按日展示频控控信息
+	 * @param day
+	 * @param deviceId
+	 * @param adgroupId
+	 * @return
+	 */
+	public int getAdgroupDayFreq(int day ,String deviceId, long adgroupId) {
+		String key = getAdgroupDayKey(day, deviceId, adgroupId); 
+		return redisUtil.getIntByKey(key);  
+	}
+	public int getAdgroupDayClickFreq(int day ,String deviceId, long adgroupId) {
+		String key = getAdgroupDayClickKey(day, deviceId, adgroupId); 
+		return redisUtil.getIntByKey(key);  
+	}
+	/**
+	 * 获取某个设备（用户）在adgroup 按周展示频控控信息
+	 * @param week
+	 * @param deviceId
+	 * @param adgroupId
+	 * @return
+	 */
+	public int getAdgroupWeekFreq(int week,String deviceId, long adgroupId) { 
+		String key = getAdgroupWeekKey(week, deviceId, adgroupId); 
+		return redisUtil.getIntByKey(key);  
+	}
+	public int getAdgroupWeekClickFreq(int week,String deviceId, long adgroupId) { 
+		String key = getAdgroupWeekClickKey(week, deviceId, adgroupId); 
+		return redisUtil.getIntByKey(key);  
+	}
+	/**
+	 * 获取某个设备（用户）在adgroup 按月展示频控控信息
+	 * @param month
+	 * @param deviceId
+	 * @param adgroupId
+	 * @return
+	 */
+	public int getAdgroupMonthFreq(int month,String deviceId, long adgroupId) { 
+		String key = getAdgroupMonthlyKey(month, deviceId, adgroupId); 
+		return redisUtil.getIntByKey(key);  
+	}
+	public int getAdgroupMonthClickFreq(int month,String deviceId, long adgroupId) { 
+		String key = getAdgroupMonthClickKey(month, deviceId, adgroupId); 
+		return redisUtil.getIntByKey(key);  
+	}
+
+	/**
+	 * 获取某个设备（用户）在adgroup 按周期展示频控控信息
+	 * @param deviceId
+	 * @param adgroupId
+	 * @return
+	 */
+	public int getAdgroupTotalFreq( String deviceId, long adgroupId) { 
+		String key = getAdgroupTotalKey(deviceId, adgroupId);
+		return redisUtil.getIntByKey(key);  
+	}
+	public int getAdgroupTotalClickFreq( String deviceId, long adgroupId) { 
+		String key = getAdgroupTotalClickKey(deviceId, adgroupId);
+		return redisUtil.getIntByKey(key);  
+	}
+
+
+	/**
+	 * adgroup展示频控信息+1：adgroup day, week,month,total
+	 * campaign展示频控信息+1: campaign day, week, month,total
+	 * @param day
+	 * @param week
+	 * @param month
+	 * @param deviceId
+	 * @param adgroupId
+	 * @param campaignId
+	 */
+	public void incrAdgroupFreq(int day, int week,int month,String deviceId, long adgroupId, long campaignId,FrequencyControl freqCamp,FrequencyControl freqAdg)
+	{
+		
+		if(freqAdg != null && freqAdg.ControlTarget == 1)
+		{
+			String key ="";
+			switch (freqAdg.ControlType) {
+			case 1:
+				key = getAdgroupDayKey(day, deviceId, adgroupId);
+				IncrByKey(key,daySeconds);
+				break;
+			case 2:
+				key = getAdgroupWeekKey(week, deviceId, adgroupId);
+				IncrByKey(key,weekSeconds);
+				break;
+			case 3:
+				key = getAdgroupMonthlyKey(month, deviceId, adgroupId);
+				IncrByKey(key,monthSeconds);
+				break;
+			case 4:
+				key = getAdgroupTotalKey(deviceId, adgroupId);
+				IncrByKey(key,totalSeconds);
+				break;
+			default:
+				break;
+			}
+		}
+		
+		if(freqCamp != null && freqCamp.ControlTarget == 1)
+		{
+			String key ="";
+			switch (freqCamp.ControlType) {
+			case 1:
+				key = getCamDayKey(day, deviceId, campaignId);
+				IncrByKey(key,daySeconds);
+				break;
+			case 2:
+				key = getCamWeekKey(week, deviceId, campaignId);
+				IncrByKey(key,weekSeconds);
+				break;
+			case 3:
+				key = getCamMonthlyKey(month, deviceId, campaignId);
+				IncrByKey(key,monthSeconds);
+				break;
+			case 4:
+				key = getCamTotalKey(deviceId, campaignId);
+				IncrByKey(key,totalSeconds);
+				break;
+			default:
+				break;
+			}
+		} 
+	}
+	
+	/**
+	 * adgroup 点击频控信息+1：adgroup day, week,month,total
+	 * campaign 点击频控信息+1: campaign day, week, month,total
+	 * @param day
+	 * @param week yyyy**格式
+	 * @param month yyyyMM格式
+	 * @param deviceId
+	 * @param adgroupId
+	 * @param campaignId
+	 */
+	public void incrAdgroupClickFreq(int day, int week,int month,String deviceId, long adgroupId, long campaignId,FrequencyControl freqCamp,FrequencyControl freqAdg)
+	{
+		if(freqAdg != null && freqAdg.ControlTarget == 2)
+		{
+			String key ="";
+			switch (freqAdg.ControlType) {
+			case 1:
+				key = getAdgroupDayClickKey(day, deviceId, adgroupId);
+				IncrByKey(key,daySeconds);
+				break;
+			case 2:
+				key = getAdgroupWeekClickKey(week, deviceId, adgroupId);
+				IncrByKey(key,weekSeconds);
+				break;
+			case 3:
+				key = getAdgroupMonthClickKey(month, deviceId, adgroupId);
+				IncrByKey(key,monthSeconds);
+				break;
+			case 4:
+				key = getAdgroupTotalClickKey(deviceId, adgroupId);
+				IncrByKey(key,totalSeconds);
+				break;
+			default:
+				break;
+			}
+		}
+		
+		if(freqCamp != null && freqCamp.ControlTarget == 2)
+		{
+			String key ="";
+			switch (freqCamp.ControlType) {
+			case 1:
+				key = getCamDayClickKey(day, deviceId, campaignId);
+				IncrByKey(key,daySeconds);
+				break;
+			case 2:
+				key = getCamWeekClickKey(week, deviceId, campaignId);
+				IncrByKey(key,weekSeconds);
+				break;
+			case 3:
+				key = getCamMonthClickKey(month, deviceId, campaignId);
+				IncrByKey(key,monthSeconds);
+				break;
+			case 4:
+				key = getCamTotalClickKey(deviceId, campaignId); 
+				IncrByKey(key,totalSeconds);
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * 加1， 如果值=1，设置自动失效期
+	 * @param key
+	 * @param seconds
+	 */
+	private void IncrByKey(String key , int seconds)
+	{
+		Jedis j = null;
+		try{
+			Long value = redisUtil.incr(key);
+			if(value == 1 && seconds > 0)
+			{
+				j = redisUtil.getWriteInstance();
+				Pipeline pipeline = j.pipelined(); 
+				pipeline.expire(key, seconds);
+				pipeline.sync(); 
+			}
+		}
+		catch(Exception ex)
+		{
+			logger.error("incrFreqRedisError:" ,ex);
+		}
+		finally
+		{
+			if(j != null)
+				j.close();
+		}
+	}
+	
+
+ 
+	private  String getCamDayKey(int day,String deviceId,long campaignId)
+	{
+		return String.format("cifd%s%s%s",day,campaignId,formatUserId(deviceId));
+	}
+	private String getCamWeekKey(int week,String deviceId,long cmpaignId)
+	{
+		return String.format("cifw%s%s%s", week,cmpaignId,formatUserId(deviceId));
+	}
+	private String getCamMonthlyKey(int month,String deviceId,long cmpaignId)
+	{
+		return String.format("cifm%s%s%s", month,cmpaignId,formatUserId(deviceId));
+	}
+	private String getCamTotalKey(String deviceId,long campaingId)
+	{
+		return String.format("cift%s%s", campaingId,formatUserId(deviceId));
+	}
+	
+	
+	private  String getCamDayClickKey(int day,String deviceId,long campaignId)
+	{ 
+		return String.format("ccfd%s%s%s", day,campaignId,formatUserId(deviceId));
+	}
+	private String getCamWeekClickKey(int week,String deviceId,long cmpaignId)
+	{
+		return String.format("ccfw%s%s%s",week,cmpaignId,formatUserId(deviceId));
+	}
+	private String getCamMonthClickKey(int month,String deviceId,long cmpaignId)
+	{
+		return String.format("ccfm%s%s%s", month,cmpaignId,formatUserId(deviceId));
+	}
+	private String getCamTotalClickKey(String deviceId,long campaingId)
+	{
+		return String.format("ccft%s%s", campaingId,formatUserId(deviceId));
+	}
+
+	
+	
+		private  String getAdgroupDayKey(int day,String deviceId,long adgroupId)
+		{
+			return String.format("gifd%s%s%s",day,adgroupId,formatUserId(deviceId));
+		} 
+		private String getAdgroupWeekKey(int week,String deviceId,long adgroupId)
+		{
+			return String.format("gifw%s%s%s", week,adgroupId,formatUserId(deviceId));
+		}
+		private String getAdgroupMonthlyKey(int month,String deviceId,long adgroupId)
+		{
+			return String.format("gifm%s%s%s", month,adgroupId,formatUserId(deviceId));
+		}
+		private String getAdgroupTotalKey(String deviceId,long adgroupId)
+		{
+			return String.format("gift%s%s", adgroupId,formatUserId(deviceId));
+		}
+	
+		
+		private  String getAdgroupDayClickKey(int day,String deviceId,long adgroupId)
+		{ 
+			return String.format("gcfd%s%s%s",day,adgroupId,formatUserId(deviceId));
+		}
+		private String getAdgroupWeekClickKey(int week,String deviceId,long adgroupId)
+		{
+			return String.format("gcfw%s%s%s",week,adgroupId,formatUserId(deviceId));
+		}
+		private String getAdgroupMonthClickKey(int month,String deviceId,long adgroupId)
+		{
+			return String.format("gcfm%s%s%s",month,adgroupId,formatUserId(deviceId));
+		}
+		private String getAdgroupTotalClickKey(String deviceId,long adgroupId)
+		{
+			return String.format("gcft%s%s", adgroupId,formatUserId(deviceId));
+		}
+		
+	/**
+	 * 设置展示频控
+	 * 
+	 * @param day
+	 * @param week
+	 * @param month
+	 * @param deviceId
+	 * @param adgroupId
+	 * @param campaignId
+	 * @param spent
+	 */
+	public void setFreq(int day, int week, int month, String deviceId, long adgroupId, long campaignId, int spent) {
+		String dayKey = getAdgroupDayKey(day, deviceId, adgroupId);
+		String weekKey = getAdgroupWeekKey(week, deviceId, adgroupId);
+		String monthKey = getAdgroupMonthlyKey(month, deviceId, adgroupId);
+		String totalKey = getAdgroupTotalKey(deviceId, adgroupId);
+
+		String dayKey2 = getCamDayKey(day, deviceId, campaignId);
+		String weekKey2 = getCamWeekKey(week, deviceId, campaignId);
+		String monthKey2 = getCamMonthlyKey(month, deviceId, campaignId);
+		String totalKey2 = getCamTotalKey(deviceId, campaignId);
+
+		Jedis j = redisUtil.getWriteInstance();
+		Pipeline pipeline = j.pipelined();
+
+		pipeline.set(dayKey, Integer.toString(spent));
+		pipeline.set(weekKey, Integer.toString(spent));
+		pipeline.set(monthKey, Integer.toString(spent));
+		pipeline.set(totalKey, Integer.toString(spent));
+
+		pipeline.set(dayKey2, Integer.toString(spent));
+		pipeline.set(weekKey2, Integer.toString(spent));
+		pipeline.set(monthKey2, Integer.toString(spent));
+		pipeline.set(totalKey2, Integer.toString(spent));
+
+		pipeline.sync();
+
+		j.close();
+	}
+
+	/**
+	 * 设置点击频控信息
+	 * @param day
+	 * @param week
+	 * @param month
+	 * @param deviceId
+	 * @param adgroupId
+	 * @param campaignId
+	 * @param spent
+	 */
+	public void setClickFreq(int day, int week, int month, String deviceId, long adgroupId, long campaignId, int spent) {
+		String dayKey = getAdgroupDayClickKey(day, deviceId, adgroupId);
+		String weekKey = getAdgroupWeekClickKey(week, deviceId, adgroupId);
+		String monthKey = getAdgroupMonthClickKey(month, deviceId, adgroupId);
+		String totalKey = getAdgroupTotalClickKey(deviceId, adgroupId);
+
+		String dayKey2 = getCamDayClickKey(day, deviceId, campaignId);
+		String weekKey2 = getCamWeekClickKey(week, deviceId, campaignId);
+		String monthKey2 = getCamMonthClickKey(month, deviceId, campaignId);
+		String totalKey2 = getCamTotalClickKey(deviceId, campaignId);
+
+		Jedis j = redisUtil.getWriteInstance();
+		Pipeline pipeline = j.pipelined();
+		pipeline.set(dayKey, Integer.toString(spent));
+		pipeline.set(weekKey, Integer.toString(spent));
+		pipeline.set(monthKey, Integer.toString(spent));
+		pipeline.set(totalKey, Integer.toString(spent));
+
+		pipeline.set(dayKey2, Integer.toString(spent));
+		pipeline.set(weekKey2, Integer.toString(spent));
+		pipeline.set(monthKey2, Integer.toString(spent));
+		pipeline.set(totalKey2, Integer.toString(spent));
+		pipeline.sync();
+		j.close();
+	}
+	
+	
+	public String formatUserId(String userId)
+	{
+		if(userId.length() <= 10)
+			return userId;
+		String res = stringMD5(userId);
+		if(res != null)
+			return res.substring(0,10);
+		return userId;
+	}
+	
+	
+	public  String stringMD5(String pw) {
+		  try {  
+		     
+		        // 拿到一个MD5转换器（如果想要SHA1参数换成”SHA1”）  
+		        MessageDigest messageDigest =MessageDigest.getInstance("MD5");  
+		        // 输入的字符串转换成字节数组  
+		        byte[] inputByteArray = pw.getBytes();  
+		        // inputByteArray是输入字符串转换得到的字节数组  
+		        messageDigest.update(inputByteArray);  
+		        // 转换并返回结果，也是字节数组，包含16个元素  
+		        byte[] resultByteArray = messageDigest.digest();  
+		        // 字符数组转换成字符串返回  
+		        return byteArrayToHex(resultByteArray);  
+		     } catch (Exception e) {  
+		        return pw;  
+		     }  
+		 }
+	
+public  String byteArrayToHex(byte[] byteArray) {  
+        
+        // 首先初始化一个字符数组，用来存放每个16进制字符  
+        char[] hexDigits = {'0','1','2','3','4','5','6','7','8','9', 'A','B','C','D','E','F' };  
+        // new一个字符数组，这个就是用来组成结果字符串的（解释一下：一个byte是八位二进制，也就是2位十六进制字符（2的8次方等于16的2次方））  
+        char[] resultCharArray =new char[byteArray.length * 2];  
+        // 遍历字节数组，通过位运算（位运算效率高），转换成字符放到字符数组中去  
+        int index = 0; 
+        for (byte b : byteArray) {  
+           resultCharArray[index++] = hexDigits[b>>> 4 & 0xf];  
+           resultCharArray[index++] = hexDigits[b& 0xf];  
+        }
+        // 字符数组组合成字符串返回  
+        return new String(resultCharArray);  
+    }
+
+}

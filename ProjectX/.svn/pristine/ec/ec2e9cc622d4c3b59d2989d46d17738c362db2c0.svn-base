@@ -1,0 +1,344 @@
+package com.yaDsp.handler;
+
+import com.alibaba.fastjson.JSON;
+import com.yaDsp.engine.DspEngine;
+import com.yaDsp.logger.LogSystem;
+import com.yaDsp.model.standard.request.*;
+import com.yaDsp.model.standard.response.AdmNative;
+import com.yaDsp.model.standard.response.Bid;
+import com.yaDsp.model.standard.response.BidResponse;
+import com.yaDsp.model.zplay.request.*;
+import com.yaDsp.model.zplay.response.*;
+import com.yaDsp.util.ZplayPriceDec;
+
+import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.Console;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+public class ZPlayBid extends HttpServlet {
+
+    private static final long serialVersionUID = -7919458189071353814L;
+
+    static DspEngine engine = new DspEngine();
+
+    protected void doPost(HttpServletRequest baseRequest,
+                          HttpServletResponse response) throws ServletException, IOException {
+
+        BufferedReader br = new BufferedReader(new InputStreamReader((ServletInputStream) baseRequest.getInputStream()
+                , "utf-8"));
+        StringBuffer sb = new StringBuffer("");
+        String temp;
+        while ((temp = br.readLine()) != null) {
+            sb.append(temp);
+        }
+        br.close();
+        temp=sb.toString();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss");
+        Object[] item = new Object[] { dateFormat.format(new Date()),// 0:时间
+                temp// 1:原始请求
+        };
+
+        LogSystem.writeLog("rawrequest", item);
+
+        ZpBidRequest zpReq = JSON
+                .parseObject(temp, ZpBidRequest.class);
+
+        //检查 Zplay请求是否满足DSP的需求
+        if(!CheckZplayReq(zpReq))
+        {
+            //不满足，直接放弃竞价
+            response.setStatus(204);
+            return;
+        }
+
+        BidRequest stdReq = ConvertToStdReq(zpReq);
+
+        BidResponse stdResp=engine.doBid(stdReq);
+
+        if (stdResp.getBids() != null
+            && stdResp.getBids().size() > 0) {
+            ZpBidResponse zpResp = ConvertToZpResp(stdResp);
+
+            String respJson = JSON.toJSONString(zpResp);
+
+            item = new Object[] { dateFormat.format(new Date()),// 0:时间
+                    respJson// 1:原始请求
+            };
+
+            LogSystem.writeLog("response", item);
+
+            response.setHeader("content-type", "application/json;charset=utf-8");
+
+            response.getWriter().write(respJson);
+        }
+        else {
+            //没有适合的广告，所以直接放弃竞价
+            response.setStatus(204);
+        }
+    }
+
+    private boolean CheckZplayReq(ZpBidRequest zpReq) {
+        //是否是测试请求
+        if (zpReq.isTest()) {
+            return false;
+        }
+
+        //是否需要https链接的标识，默认为false。
+        //当为true时，需要返回的所有素材及追 踪链接必须是https链接
+        //todo：测试阶段使用，等物料链接支持https后删除
+        if (zpReq.getExt().isNeed_https()) {
+            return false;
+        }
+
+        List<ZpImp> zpImps = zpReq.getImp();
+        if (zpImps != null && zpImps.size() > 0) {
+            ZpImp zpImp = zpImps.get(0);
+
+            //是否是原生广告
+            if (zpImp != null && 3 != zpImp.getExt().getAd_type()) {
+                return false;
+            }
+
+            ZpNative zpNative = zpImp.getNativeInfo();
+
+            //判断layout是否等于3（信息流）
+            if (zpNative != null
+                    && zpNative.getRequestOneof() != null
+                    && zpNative.getRequestOneof().getRequestNative() != null
+                    && zpNative.getRequestOneof().getRequestNative().getLayout() != 3) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private BidRequest ConvertToStdReq(ZpBidRequest zpReq)
+    {
+        BidRequest result = new BidRequest();
+
+        if (zpReq == null)
+        {
+            return  result;
+        }
+
+        result.setId(zpReq.getId());
+
+        List<ZpImp> zpImps = zpReq.getImp();
+        List<Imp> imps = new ArrayList<Imp>();
+
+        for (ZpImp zpImp :  zpImps) {
+            Imp imp = new Imp();
+            imp.setId(zpImp.getId());
+
+            ZpBanner zpBanner = zpImp.getBanner();
+
+            if (zpBanner != null) {
+                Banner stdBanner = new Banner();
+                stdBanner.setW(zpBanner.getW());
+                stdBanner.setH(zpBanner.getH());
+
+                switch (zpBanner.getPos().ordinal())
+                {
+                    case 4:
+                    case 5:
+                    case 6:
+                        stdBanner.setType(0);
+                        break;
+                    case 7:
+                        stdBanner.setType(2);
+                        break;
+                    default:
+                        break;
+                }
+
+                imp.setBanner(stdBanner);
+            }
+
+            ZpNative zpNative = zpImp.getNativeInfo();
+
+            if (zpNative != null && zpNative.getRequestOneof() != null) {
+                ReqNative nativeRequest = zpNative.getRequestOneof().getRequestNative();
+
+                imp.setNativeRequest(nativeRequest);
+            }
+
+            imp.setBidfloor((int)zpImp.getBidfloor());
+
+            imps.add(imp);
+        }
+
+        result.setImp(imps);
+
+        App app = new App();
+
+        ZpApp zxApp = zpReq.getApp();
+        if (zxApp != null)
+        {
+            app.setId(zxApp.getId());
+            app.setName(zxApp.getName());
+
+            app.setSspId("2");
+            //todo
+            //app.setBundleId(zxApp.getBundle());
+            //app.setCat();
+        }
+
+        result.setApp(app);
+
+        Device device = new Device();
+
+        ZpDevice zpDevice = zpReq.getDevice();
+
+        if (zpDevice != null) {
+            device.setUa(zpDevice.getUa());
+
+            Geo geo = new Geo();
+
+            ZpGeo zpGeo = zpDevice.getGeo();
+
+            if (zpGeo != null) {
+                geo.setLat((float) zpGeo.getLat());
+                geo.setLon((float) zpGeo.getLon());
+                geo.setProvince(zpGeo.getRegion());
+                geo.setCity(zpGeo.getCity());
+            }
+
+            device.setGeo(geo);
+
+            device.setIp(zpDevice.getIp());
+
+            device.setModel(zpDevice.getModel());
+
+            String os = zpDevice.getOs().toLowerCase();
+
+            switch (os) {
+                case "ios":
+                    device.setOs((short) 1);
+                    break;
+                case "android":
+                    device.setOs((short) 2);
+                    break;
+                case "wp":
+                    device.setOs((short) 4);
+                    break;
+                default:
+                    device.setOs((short) 0);
+                    break;
+            }
+
+            ZpDeviceExt zpDeviceExt = zpDevice.getExt();
+
+            device.setImei(zpDeviceExt.getImei());
+            device.setIfa(zpDeviceExt.getIdfv());
+        }
+
+        result.setDevice(device);
+
+        result.setSsp_id("2");
+        result.setSsp_token("");
+
+        //todo
+        List<String> pdb = new ArrayList<String>();
+
+        result.setPdb(pdb);
+
+        //todo:禁用的广告类别 标准Request中没有对应字段？
+        //zpReq.getBcat();
+
+        User user = new User();
+
+        ZpUser zpUser = zpReq.getUser();
+
+        if (zpUser != null)
+        {
+            user.setUserId(zpUser.getId());
+            user.setSex(zpUser.getGender());
+        }
+
+        result.setUser(user);
+
+        //测试用
+        result.setDebug(true);
+
+        return  result;
+    }
+
+    private ZpBidResponse ConvertToZpResp(BidResponse stdResp)
+    {
+        ZpBidResponse result = new ZpBidResponse();
+
+        result.setId(stdResp.getId());
+
+        List<ZpSeatBid> seatbids = new ArrayList<ZpSeatBid>();
+        ZpSeatBid zpSeatBid = new ZpSeatBid();
+
+        List<ZpBid> zpBids = new ArrayList<ZpBid>();
+
+        List<Bid> bids = stdResp.getBids();
+
+        for (Bid bid : bids)
+        {
+            ZpBid zxBid = new ZpBid();
+
+            zxBid.setId(stdResp.getId());
+
+            zxBid.setImpid(bid.getImpID());
+
+            zxBid.setPrice(bid.getPrice());
+
+            zxBid.setAdid(bid.getAdmId());
+
+            zxBid.setNurl(bid.getNurl());
+
+            AdmNative admNative = bid.getAdmNative();
+
+            ZpAdmOneof zpAdmOneof = new ZpAdmOneof();
+
+            zpAdmOneof.setAdmNative(admNative);
+
+            zxBid.setAdmOneof(zpAdmOneof);
+
+            ZpBidExt zpBidExt = new ZpBidExt();
+            zpBidExt.setAction(1);
+            zpBidExt.setInventory_type(6);
+
+            zpBidExt.setImptrackers(bid.getImpTracking());
+            zpBidExt.setClktrackers(bid.getClkTracking());
+
+            zxBid.setExt(zpBidExt);
+
+            zpBids.add(zxBid);
+        }
+
+        zpSeatBid.setBid(zpBids);
+        seatbids.add(zpSeatBid);
+
+        result.setSeatbid(seatbids);
+
+        return  result;
+    }
+
+    private void PriceTest()
+    {
+        ZplayPriceDec p = new ZplayPriceDec();
+        p.setEncKey("ABE53CC1B7FDA2903681192D105A53EC");
+        p.setSigKey("da2d9026aa90400cbc9c4db053e65b82");
+
+        String base64Str = "ebHrWLBZ_vQ8id_wknHJAw";
+
+        System.out.println(p.decode(base64Str));
+    }
+}

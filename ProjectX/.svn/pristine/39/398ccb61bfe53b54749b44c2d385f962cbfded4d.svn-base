@@ -1,0 +1,37 @@
+package com.yaDsp.material.model;
+
+import java.util.Map;
+
+import org.joda.time.DateTime;
+
+public class AmountControl {
+	/**
+	 *
+	 * 0：不限，1：日控量，2：周期控量, 3:日控量+周期控量
+	 */
+	public int ControlType;
+
+
+	/**
+	 * 日限量
+	 */
+	public int DailyAmount;
+
+	/**
+	 * 周期总控量
+	 */
+	public int TotalAmount;
+	
+	public Map<String,Integer> Days;
+	public int getDailyAmount(){
+		if(Days != null){
+			String key = DateTime.now().toString("yyyyMMdd");
+			if(Days.containsKey(key)){
+				return Days.get(key);
+			}
+		}
+		return DailyAmount;
+	}
+	
+	
+}

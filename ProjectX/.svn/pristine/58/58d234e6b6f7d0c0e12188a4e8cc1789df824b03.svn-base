@@ -1,0 +1,11 @@
+package com.yaDsp.strategy;
+
+import java.util.List;
+
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.model.standard.request.BidRequest;
+ 
+public interface Strategy {
+	List<Ad> execute(BidRequest request,List<Ad> ads);
+	String getName();
+}

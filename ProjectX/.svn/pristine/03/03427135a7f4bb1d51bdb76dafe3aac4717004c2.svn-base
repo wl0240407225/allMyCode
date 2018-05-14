@@ -1,0 +1,40 @@
+package com.yaDsp.material.model;
+
+public class Tag {
+	String tag_name;
+	String idfa_numbers;
+	String csv_name;
+	public String getTag_name() {
+		return tag_name;
+	}
+	public void setTag_name(String tag_name) {
+		this.tag_name = tag_name;
+	}
+	public String getIdfa_numbers() {
+		return idfa_numbers;
+	}
+	public void setIdfa_numbers(String idfa_numbers) {
+		this.idfa_numbers = idfa_numbers;
+	}
+	public String getCsv_name() {
+		return csv_name;
+	}
+	public void setCsv_name(String csv_name) {
+		this.csv_name = csv_name;
+	}
+	public String getTag_url() {
+		return tag_url;
+	}
+	public void setTag_url(String tag_url) {
+		this.tag_url = tag_url;
+	}
+	String tag_url;
+	private String tag_id;
+	public String getTag_id() {
+		return tag_id;
+	}
+	public void setTag_id(String tag_id) {
+		this.tag_id = tag_id;
+	}
+
+}

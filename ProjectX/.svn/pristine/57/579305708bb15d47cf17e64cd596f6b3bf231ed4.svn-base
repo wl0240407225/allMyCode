@@ -1,0 +1,34 @@
+package com.yaDsp.model.zhixing;
+
+
+import java.util.List;
+
+public class ZxBidResponse {
+    private String id;
+    private List<ZxBid> seatbid;
+    private String bidid;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public List<ZxBid> getSeatbid() {
+        return seatbid;
+    }
+
+    public void setSeatbid(List<ZxBid> seatbid) {
+        this.seatbid = seatbid;
+    }
+
+    public String getBidid() {
+        return bidid;
+    }
+
+    public void setBidid(String bidid) {
+        this.bidid = bidid;
+    }
+}

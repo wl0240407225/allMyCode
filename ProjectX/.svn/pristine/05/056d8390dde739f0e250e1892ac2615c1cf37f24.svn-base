@@ -1,0 +1,27 @@
+package com.yaDsp.material.model;
+
+public class GeographicValue {
+
+	String id;
+	String name;
+	String area_code;
+	
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getArea_code() {
+		return area_code;
+	}
+	public void setArea_code(String area_code) {
+		this.area_code = area_code;
+	}
+}

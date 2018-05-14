@@ -1,0 +1,15 @@
+package com.yaDsp.model.zplay.request;
+
+import com.yaDsp.model.standard.request.ReqNative;
+
+public class ZpImpNative {
+    private ReqNative RequestNative;
+
+    public ReqNative getRequestNative() {
+        return RequestNative;
+    }
+
+    public void setRequestNative(ReqNative requestNative) {
+        RequestNative = requestNative;
+    }
+}

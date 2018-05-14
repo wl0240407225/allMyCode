@@ -1,0 +1,45 @@
+package com.yaDsp.trc.listener;
+
+import java.util.Calendar;
+
+import com.yaDsp.material.CreativeServiceImpl;
+import com.yaDsp.material.model.FrequencyControl;
+import com.yaDsp.strategy.impl.AmountManager;
+import com.yaDsp.strategy.impl.BudgetManager;
+import com.yaDsp.strategy.impl.FrequencyManager;
+import com.yaDsp.trc.TrcEventListener;
+import com.yaDsp.trc.TrcModel;
+import com.yaDsp.util.DateFormatterUtil;
+
+public class AmountControlListener implements TrcEventListener {
+
+	@Override
+	public void handle(TrcModel model) {
+
+		int day = DateFormatterUtil.getDate();
+		int month = day / 100;
+		int week = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
+		int creativeId = Integer.parseInt(model.getCreativeId());
+		long adgroupId = Long.parseLong(model.getAdgroupId());
+		long campaignId = Long.parseLong(model.getCampaignId());
+		String uid = model.getDeviceId();
+
+		CreativeServiceImpl service = new CreativeServiceImpl();
+		if (model.getAct().equals("imp")) {
+			int price = model.getDecryptedPrice();
+			if (price > 0 && price < 100000)
+				budgetManager.incrSpent(day, adgroupId, campaignId, price);
+			FrequencyControl[] freq = service.getFrequencycap(creativeId);
+			amountManager.incrAdgroupImp(day, adgroupId, campaignId);
+			frequencyManager.incrAdgroupFreq(day, week, month, uid, adgroupId, campaignId, freq[0], freq[1]);
+		} else {
+			FrequencyControl[] freq = service.getFrequencycap(creativeId);
+			amountManager.incrAdgroupClick(day, adgroupId, campaignId);
+			frequencyManager.incrAdgroupClickFreq(day, week, month, uid, adgroupId, campaignId, freq[0], freq[1]);
+		}
+	}
+
+	AmountManager amountManager = new AmountManager();
+	BudgetManager budgetManager = new BudgetManager();
+	FrequencyManager frequencyManager = new FrequencyManager();
+}

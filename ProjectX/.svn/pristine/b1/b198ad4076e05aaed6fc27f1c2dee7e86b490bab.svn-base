@@ -1,0 +1,26 @@
+package com.yaDsp.model.zplay.request;
+
+import com.yaDsp.model.zplay.request.ZpDeal;
+
+import java.util.List;
+
+public class ZpPmp {
+    private boolean private_auction;
+    private List<ZpDeal> deals;
+
+    public boolean isPrivate_auction() {
+        return private_auction;
+    }
+
+    public void setPrivate_auction(boolean private_auction) {
+        this.private_auction = private_auction;
+    }
+
+    public List<ZpDeal> getDeals() {
+        return deals;
+    }
+
+    public void setDeals(List<ZpDeal> deals) {
+        this.deals = deals;
+    }
+}

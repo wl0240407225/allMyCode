@@ -1,0 +1,45 @@
+package com.yaDsp.util;
+ 
+
+import java.util.List;
+
+public class ListUtil {
+
+	public static String intListToString(List<Integer> list){
+        if (list == null || list.size() == 0) {
+            return "";
+        }
+        
+        StringBuilder result=new StringBuilder();
+        boolean flag=false;
+        for (Integer item : list) {
+            if (flag) {
+                result.append(",");
+            }else {
+                flag=true;
+            }
+            result.append(item);
+        }
+        
+        return result.toString();
+    }
+	
+	public static String strListToString(List<String> list){
+        if (list == null || list.size() == 0) {
+            return "";
+        }
+        
+        StringBuilder result=new StringBuilder();
+        boolean flag=false;
+        for (String item : list) {
+            if (flag) {
+                result.append(",");
+            }else {
+                flag=true;
+            }
+            result.append(item);
+        }
+        
+        return result.toString();
+    }
+}

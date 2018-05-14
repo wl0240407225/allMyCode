@@ -1,0 +1,111 @@
+package com.yaDsp.strategy.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.material.model.AmountControl;
+import com.yaDsp.model.standard.request.BidRequest;
+import com.yaDsp.strategy.FilterStrategy;
+import com.yaDsp.util.DateFormatterUtil;
+ 
+
+ 
+public class ImpressionControlStrategy   implements FilterStrategy {
+ 
+	 
+	AmountManager am=new AmountManager(); 
+	
+	private static Logger logger = LoggerFactory.getLogger(ImpressionControlStrategy.class);
+	
+	
+	@Override
+	public List<Ad> execute(BidRequest request, List<Ad> ads) {
+		List<Ad> result = new ArrayList<Ad>();
+		
+		try{
+		if(ads != null && ads.size() > 0)
+		{
+			
+			
+			for (Ad ad : ads) {
+				int count = -2;
+				int count2 = -2;
+				boolean isOutofImpAmount = false;
+				int day = DateFormatterUtil.getDate();
+				if(ad.adgroup.getImp_control() != null)
+				{
+					AmountControl ac = ad.adgroup.getImp_control();
+					if(ac.ControlType == 1){
+						 count = am.getAdgroupDayImp(day, ad.adgroupId);
+						isOutofImpAmount = count == -1 || count >= ac.getDailyAmount() ;
+					}else if(ac.ControlType == 2){
+						 count = am.getAdgroupTotalImp(ad.adgroupId);
+						isOutofImpAmount = count == -1 || count >= ac.TotalAmount;
+					}else if(ac.ControlType == 3){
+						 count = am.getAdgroupDayImp(day, ad.adgroupId);
+						 count2 = am.getAdgroupTotalImp(ad.adgroupId);
+						isOutofImpAmount = count == -1 || count >= ac.getDailyAmount() ||
+										   count2 == -1 || count2 >= ac.TotalAmount;;
+					}
+					if(request.isDebug())
+					{
+						logger.debug("ImpressionControlAdgDebug: Count:"+Integer.toString(count)+" Count2�?"+Integer.toString(count2));
+						logger.debug("ImpressionControlAdgDebug: OutofAdgBudget:"+Boolean.toString(isOutofImpAmount));
+						
+					}
+					if(isOutofImpAmount) 
+						continue;
+				}
+				
+				count = -2;
+				count2 = -2;
+				if(ad.campaign.getImp_control() != null)
+				{
+					AmountControl ac = ad.campaign.getImp_control();
+					if (ac.ControlType == 1) {
+						 count = am.getCamDayImp(day, ad.campiagnId);
+						isOutofImpAmount = count == -1 || count  >= ac.getDailyAmount(); 
+					}else if(ac.ControlType == 2){
+						 count = am.getCamTotalImp(ad.campiagnId);
+						isOutofImpAmount =  count == -1 || count >= ac.TotalAmount;
+					}else if(ac.ControlType == 3){
+						 count = am.getCamDayImp(day, ad.campiagnId);
+						 count2 = am.getCamTotalImp(ad.campiagnId);
+						isOutofImpAmount = count == -1 || count >= ac.getDailyAmount() ||
+										   count2 == -1 || count2 >= ac.TotalAmount;  
+					}
+					if(request.isDebug())
+					{
+						logger.debug("ImpressionControlCampDebug: Count:"+Integer.toString(count)+" Count2�?"+Integer.toString(count2));
+						logger.debug("ImpressionControlCampDebug: OutofCampaignBudget:"+Boolean.toString(isOutofImpAmount));
+						
+					}
+					if(isOutofImpAmount) 
+						continue;
+				}
+				result.add(ad);
+			}	
+		}
+			return result;
+		}
+		catch(Exception x)
+		{
+			logger.debug("ImpressionError:"+x.getMessage());
+			return result;
+		}
+		
+	}
+
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return "ImpressionAmountControl";
+	}
+
+	
+
+}

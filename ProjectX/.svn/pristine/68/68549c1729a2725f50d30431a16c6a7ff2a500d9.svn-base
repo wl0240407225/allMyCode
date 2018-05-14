@@ -1,0 +1,38 @@
+package com.yaDsp.strategy.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.model.standard.request.BidRequest;
+import com.yaDsp.strategy.PriorityStrategy;
+
+ 
+
+ 
+public class RandomStrategy   implements PriorityStrategy {
+
+	static Random rand=new Random(System.currentTimeMillis());
+	
+	@Override
+	public List<Ad> execute(BidRequest request, List<Ad> ads) {
+		List<Ad> result=new ArrayList<Ad>();
+		if(ads != null){
+			int size=ads.size();
+			if(size<=1) return ads;
+			int selected=rand.nextInt(size);  
+			result.add(ads.get(selected));
+		}
+		return result;		 
+	}
+
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return "Random";
+	}
+
+	
+
+}

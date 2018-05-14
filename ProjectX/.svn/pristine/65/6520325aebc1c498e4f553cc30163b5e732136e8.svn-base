@@ -1,0 +1,12 @@
+package com.yaDsp.connect;
+
+public abstract class PriceDecryptor {
+	public abstract int Decrypt(String encrypt);
+	
+	protected String sspid;
+	
+	public String GetSspId() {
+		return sspid;
+	}
+
+}

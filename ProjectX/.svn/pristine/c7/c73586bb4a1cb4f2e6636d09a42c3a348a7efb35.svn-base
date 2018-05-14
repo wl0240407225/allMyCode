@@ -1,0 +1,53 @@
+package com.yaDsp.model.zhixing;
+
+import com.alibaba.fastjson.annotation.JSONField;
+
+public class ZxImp {
+
+    private String id;
+    private String tagid;
+    private int bidfloor;
+    private String bidfloorcur;
+    private ZxNative nativeinfo;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getTagid() {
+        return tagid;
+    }
+
+    public void setTagid(String tagid) {
+        this.tagid = tagid;
+    }
+
+    public int getBidfloor() {
+        return bidfloor;
+    }
+
+    public void setBidfloor(int bidfloor) {
+        this.bidfloor = bidfloor;
+    }
+
+    public String getBidfloorcur() {
+        return bidfloorcur;
+    }
+
+    public void setBidfloorcur(String bidfloorcur) {
+        this.bidfloorcur = bidfloorcur;
+    }
+
+    public ZxNative getNativeinfo() {
+        return nativeinfo;
+    }
+
+    @JSONField(name="native")
+    public void setNativeinfo(ZxNative nativeinfo) {
+        this.nativeinfo = nativeinfo;
+    }
+}

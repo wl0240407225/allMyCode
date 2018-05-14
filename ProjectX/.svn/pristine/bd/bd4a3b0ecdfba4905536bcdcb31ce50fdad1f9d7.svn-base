@@ -1,0 +1,25 @@
+package com.yaDsp.model.standard.response;
+
+import com.yaDsp.model.standard.response.Bid;
+
+import java.util.List;
+
+public class BidResponse {
+
+	private String id;
+	private List<Bid> bids;
+	public String strategy_ext_name;
+	
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public List<Bid> getBids() {
+		return bids;
+	}
+	public void setBids(List<Bid> bids) {
+		this.bids = bids;
+	}	
+}

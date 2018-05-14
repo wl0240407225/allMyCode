@@ -1,0 +1,137 @@
+package com.yaDsp.material;
+import com.yaDsp.material.model.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+ 
+
+public class CreativeServiceImpl {
+
+	private static HashMap<Integer, Creative> creativeTable = new HashMap<Integer, Creative>();
+
+	// creativeUnitId 和  List<creativeId> 的映射
+    private static HashMap<Integer, List<Integer>> mappingIdTable = new HashMap<Integer, List<Integer>>();
+		
+	private ReentrantReadWriteLock rw1 = new ReentrantReadWriteLock();
+	
+	 
+	public List<Integer> updateCreative(List<Creative> creatives) {
+		rw1.writeLock().lock();
+
+		List<Integer> result = new ArrayList<Integer>();
+
+		for (Creative creative : creatives) {
+
+			try {
+				creativeTable.put(creative.getCreative_id(), creative);
+
+				//更新creativeUnitId 和  List<creativeId> 的映射
+				List<Integer> creativeIds = mappingIdTable.getOrDefault(creative.getCreative_unit_id(), 
+						new ArrayList<Integer>());
+						
+				if(!creativeIds.contains(creative.getCreative_id()))
+				{
+					creativeIds.add(creative.getCreative_id());
+					mappingIdTable.put(creative.getCreative_unit_id(), creativeIds);
+				}
+			} catch (Exception e) {
+				result.add(creative.getCreative_id());
+			}
+		}
+
+		rw1.writeLock().unlock();
+
+		return result;
+	}
+
+ 
+	public List<Integer> deleteCreative(List<Integer> creativeIds) {
+		rw1.writeLock().lock();
+
+		List<Integer> result = new ArrayList<Integer>();
+
+		for (Integer creativeId : creativeIds) {
+
+			try {
+				if (creativeTable.containsKey(creativeId)) {
+					
+					//移除mappingIdTable中存在的campaignId
+					Creative creative = creativeTable.get(creativeId);
+					
+					List<Integer> creativeIdList = mappingIdTable.getOrDefault(creative.getCreative_unit_id(), 
+							new ArrayList<Integer>());
+					
+					creativeIdList.remove(creativeId);
+					mappingIdTable.put(creative.getCreative_unit_id(), creativeIdList);
+					
+					creativeTable.remove(creativeId);
+				}
+			} catch (Exception e) {
+				result.add(creativeId);
+			}
+		}
+
+		rw1.writeLock().unlock();
+
+		return result;
+	}
+
+ 
+	public HashMap<Integer, Creative> getCreative(List<Integer> creativeIds) {
+		rw1.readLock().lock();
+
+		HashMap<Integer, Creative> result = new HashMap<Integer, Creative>();
+
+		for (Integer creativeId : creativeIds) {
+			if (creativeTable.containsKey(creativeId)) {
+				result.put(creativeId, creativeTable.get(creativeId));
+			}
+		}
+
+		rw1.readLock().unlock();
+
+		return result;
+	}
+
+	 
+	public HashMap<Integer, Creative> getAllCreative() {
+		return creativeTable;
+	}
+
+	 
+	public HashMap<Integer, List<Integer>> getMappingIdTable() {
+		return mappingIdTable;
+	}
+
+ 
+	public FrequencyControl[] getFrequencycap(int creativeId)
+	{
+		rw1.readLock().lock();
+		
+		FrequencyControl[] result = new FrequencyControl[2];
+		
+		Creative creative = creativeTable.get(creativeId);
+		
+		if(creative != null)
+		{
+			int campaignId = creative.getCampaign_id();
+			int adgroupId = creative.getAdgroup_id();
+			
+			CampaignServiceImpl campaignServiceImpl = new CampaignServiceImpl();
+			result[0] = campaignServiceImpl.getCampaign(campaignId).getFrequencycap();
+			
+			AdgroupServiceImpl adgroupServiceImpl = new AdgroupServiceImpl();
+			result[1] = adgroupServiceImpl.getAdgroup(adgroupId).getFrequencycap();
+		}
+		else
+		{
+			result[0] = new FrequencyControl();
+			result[1] = new FrequencyControl();
+		}
+		
+		rw1.readLock().unlock();
+
+		return result;
+	}
+}

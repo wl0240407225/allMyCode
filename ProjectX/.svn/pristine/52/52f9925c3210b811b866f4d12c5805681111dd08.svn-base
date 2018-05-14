@@ -1,0 +1,20 @@
+package com.yaDsp.material.model;
+
+import java.util.List;
+
+public class PoiValue {
+	String geographic_extend;
+	List<PoiData> poidata;
+	public String getGeographic_extend() {
+		return geographic_extend;
+	}
+	public void setGeographic_extend(String geographic_extend) {
+		this.geographic_extend = geographic_extend;
+	}
+	public List<PoiData> getPoidata() {
+		return poidata;
+	}
+	public void setPoidata(List<PoiData> poidata) {
+		this.poidata = poidata;
+	}
+}

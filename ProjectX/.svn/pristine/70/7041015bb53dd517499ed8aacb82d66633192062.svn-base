@@ -1,0 +1,119 @@
+package com.yaDsp.material;
+import com.yaDsp.material.model.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+ 
+
+public class AdgroupServiceImpl  {
+
+	private static HashMap<Integer, Adgroup> adgroupTable = new HashMap<Integer, Adgroup>();
+
+	// campaignId 和  List<adgroupId> 的映射
+	private static HashMap<Integer, List<Integer>> mappingIdTable = new HashMap<Integer, List<Integer>>();
+	
+	private ReentrantReadWriteLock rw1 = new ReentrantReadWriteLock();
+	
+	 
+	public List<Integer> updateAdgroup(List<Adgroup> adgroups) {
+		rw1.writeLock().lock();
+
+		List<Integer> result = new ArrayList<Integer>();
+
+		for (Adgroup adgroup : adgroups) {
+
+			try {
+				adgroupTable.put(adgroup.getAdgroup_id(), adgroup);
+
+				//更新campaignId 和  List<adgroupId> 的映射
+				List<Integer> adgroupIds = mappingIdTable.getOrDefault(adgroup.getCampaign_id(), 
+						new ArrayList<Integer>());
+						
+				if(!adgroupIds.contains(adgroup.getAdgroup_id()))
+				{
+					adgroupIds.add(adgroup.getAdgroup_id());
+					mappingIdTable.put(adgroup.getCampaign_id(), adgroupIds);
+				}
+			} catch (Exception e) {
+				result.add(adgroup.getAdgroup_id());
+			}
+		}
+
+		rw1.writeLock().unlock();
+
+		return result;
+	}
+ 
+	public List<Integer> deleteAdgroup(List<Integer> adgroupIds) {
+		rw1.writeLock().lock();
+
+		List<Integer> result = new ArrayList<Integer>();
+
+		for (Integer adgroupId : adgroupIds) {
+
+			try {
+				if (adgroupTable.containsKey(adgroupId)) {
+					
+			 
+					Adgroup adgroup = adgroupTable.get(adgroupId);
+					
+					List<Integer> adgroupIdList = mappingIdTable.getOrDefault(adgroup.getCampaign_id(), 
+							new ArrayList<Integer>());
+					
+					adgroupIdList.remove(adgroupId);
+					mappingIdTable.put(adgroup.getCampaign_id(), adgroupIdList);
+					
+					 
+					adgroupTable.remove(adgroupId);
+				}
+			} catch (Exception e) {
+				result.add(adgroupId);
+			}
+		}
+
+		rw1.writeLock().unlock();
+
+		return result;
+	}
+ 
+	public HashMap<Integer, Adgroup> getAdgroup(List<Integer> adgroupIds) {
+		rw1.readLock().lock();
+
+		HashMap<Integer, Adgroup> result = new HashMap<Integer, Adgroup>();
+
+		for (Integer adgroupId : adgroupIds) {
+			if (adgroupTable.containsKey(adgroupId)) {
+				result.put(adgroupId, adgroupTable.get(adgroupId));
+			}
+		}
+
+		rw1.readLock().unlock();
+
+		return result;
+	}
+
+	public Adgroup getAdgroup(int adgroupId) {
+		rw1.readLock().lock();
+
+		Adgroup result = new Adgroup();
+
+		if (adgroupTable.containsKey(adgroupId)) {
+			result = adgroupTable.get(adgroupId);
+		}
+
+		rw1.readLock().unlock();
+
+		return result;
+	}
+	
+ 
+	public HashMap<Integer, Adgroup> getAllAdgroup() {
+		return adgroupTable;
+	}
+ 
+	public HashMap<Integer, List<Integer>> getMappingIdTable() {
+		return mappingIdTable;
+	}
+
+}

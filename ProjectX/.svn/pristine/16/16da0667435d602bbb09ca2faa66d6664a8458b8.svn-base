@@ -1,0 +1,13 @@
+package com.yaDsp.model.zplay.request;
+
+public class ZpNative {
+    private ZpImpNative RequestOneof;
+
+    public ZpImpNative getRequestOneof() {
+        return RequestOneof;
+    }
+
+    public void setRequestOneof(ZpImpNative requestOneof) {
+        RequestOneof = requestOneof;
+    }
+}

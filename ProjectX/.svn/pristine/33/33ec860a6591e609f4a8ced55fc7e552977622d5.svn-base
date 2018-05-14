@@ -1,0 +1,122 @@
+package com.yaDsp.handler;
+
+import java.io.IOException;
+import java.util.Arrays;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.alibaba.fastjson.JSON;
+import com.yaDsp.material.*;
+
+public class AdSync extends HttpServlet {
+
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	protected void doPost(HttpServletRequest baseRequest,
+			HttpServletResponse response) throws ServletException, IOException {
+		String jsonContent = baseRequest.getParameter("data");
+		AdSyncResult result = new AdSyncResult();
+
+		try {
+			AdSyncParam param = JSON
+					.parseObject(jsonContent, AdSyncParam.class);
+			if (param != null) {
+				switch (param.level.toLowerCase()) {
+				case "account":
+					Integer[] id=param.getIds();
+					if(id==null)
+						id=new Integer[0];
+					result = AdSyncService.syncAccount(
+							Arrays.asList(id), param.includeChild);
+					break;
+				case "campaign":
+					result = AdSyncService.syncCampaign(
+							Arrays.asList(param.getIds()), param.includeChild);
+					break;
+				case "adgroup":
+					result = AdSyncService.syncAdGroup(
+							Arrays.asList(param.getIds()), param.includeChild);
+					break;
+				case "creative_unit":
+					result = AdSyncService.syncCreativeUnit(
+							Arrays.asList(param.getIds()), param.includeChild);
+					break;
+				case "creative":
+					result = AdSyncService.syncCreative(Arrays.asList(param
+							.getIds()));
+					break;
+				default:
+					result.setSuccess(false);
+					result.setFailReason("参数格式不合法。");
+
+				}
+			} else {
+				result.setSuccess(false);
+				result.setFailReason("参数格式不合法。");
+			}
+		} catch (Exception e) {
+			result.setSuccess(false);
+			result.setFailReason(e.getMessage());
+		}
+
+		String str = JSON.toJSONString(result);
+		response.setHeader("content-type", "application/json;charset=utf-8");
+		response.getWriter().write(str);
+	}
+
+	@Override
+	protected void doGet(HttpServletRequest baseRequest,
+			HttpServletResponse response) throws ServletException, IOException {
+		String level = "campaign";
+		if (baseRequest.getParameter("level")!=null)
+			level = baseRequest.getParameter("level").toLowerCase();
+		int id = -1;
+		try {
+			Integer.parseInt(baseRequest.getParameter("id"));
+		} catch (Exception e) {
+
+		}
+		 
+		Object res=AdSyncService.getMaterial(level, id);
+		String s=JSON.toJSONString(res);
+		response.setHeader("content-type", "application/json;charset=utf-8");
+		response.getWriter().write(s);
+
+	}
+
+}
+
+class AdSyncParam {
+	String level;
+	boolean includeChild;
+	Integer[] ids;
+
+	public String getLevel() {
+		return level;
+	}
+
+	public void setLevel(String level) {
+		this.level = level;
+	}
+
+	public boolean isIncludeChild() {
+		return includeChild;
+	}
+
+	public void setIncludeChild(boolean includeChild) {
+		this.includeChild = includeChild;
+	}
+
+	public Integer[] getIds() {
+		return ids;
+	}
+
+	public void setIds(Integer[] ids) {
+		this.ids = ids;
+	}
+
+}

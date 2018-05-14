@@ -1,0 +1,26 @@
+package com.yaDsp.material.model;
+
+public class AdObjectiveWindows {
+	private String app_store;
+	private String app_name;
+	private String windows_appid;
+	
+	public String getApp_store() {
+		return app_store;
+	}
+	public void setApp_store(String app_store) {
+		this.app_store = app_store;
+	}
+	public String getApp_name() {
+		return app_name;
+	}
+	public void setApp_name(String app_name) {
+		this.app_name = app_name;
+	}
+	public String getWindows_appid() {
+		return windows_appid;
+	}
+	public void setWindows_appid(String windows_appid) {
+		this.windows_appid = windows_appid;
+	}
+}

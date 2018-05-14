@@ -1,0 +1,175 @@
+package com.yaDsp.strategy.impl;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.material.model.FrequencyControl;
+import com.yaDsp.model.standard.request.BidRequest;
+import com.yaDsp.strategy.FilterStrategy;
+import com.yaDsp.util.DateFormatterUtil;
+ 
+ 
+public class FrequencyControlStrategy   implements FilterStrategy {
+ 
+ 
+	FrequencyManager fm;
+	
+	private static Logger logger = LoggerFactory.getLogger(FrequencyControlStrategy.class);
+	
+	
+	@Override
+	public List<Ad> execute(BidRequest request, List<Ad> ads) {
+		List<Ad> result = new ArrayList<Ad>();
+		
+		try{
+		if(ads != null && ads.size() > 0)
+		{
+			for (Ad ad : ads) 
+			{ 
+				int day = DateFormatterUtil.getDate(); 
+				int week = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
+				int month = day/100;
+				boolean isOutofFreq = isOutOfAdgroupFreq(day, week, month, ad.adgroup.getFrequencycap(),request.getUser().getUserId(),ad.adgroupId);;
+				if(!isOutofFreq)
+					isOutofFreq = isOutOfCampaignFreq(day, week, month, ad.campaign.getFrequencycap(),request.getUser().getUserId(),ad.campiagnId);;
+				if(!isOutofFreq)
+					result.add(ad);
+			}	
+		}
+		return result;
+		}
+		catch(Exception e)
+		{
+			logger.debug("FrequencyControlError:"+e.getMessage());
+			return result;
+		}
+	}
+
+
+	/**
+	 * 广告�? 频控
+	 * @param day
+	 * @param week
+	 * @param month
+	 * @param fc
+	 * @param userId
+	 * @param adgroupId
+	 * @return
+	 */
+	private boolean isOutOfAdgroupFreq(int day, int week, int month, FrequencyControl fc,String userId,long adgroupId) {
+		boolean isOutofFreq =false;
+		if(fc != null )
+		{
+			if(fc.ControlTarget == 1)
+			{
+				switch (fc.ControlType) {
+				case 1:
+					isOutofFreq =  fm.getAdgroupDayFreq(day, userId, adgroupId) >= fc.TotalAmount ; 
+					break;
+				case 2:
+					isOutofFreq = fm.getAdgroupWeekFreq(week, userId, adgroupId)>= fc.TotalAmount; 
+					break;
+				case 3:
+					isOutofFreq = fm.getAdgroupMonthFreq(month, userId, adgroupId) >= fc.TotalAmount; 
+					break;
+				case 4:
+					isOutofFreq = fm.getAdgroupTotalFreq(userId, adgroupId) >= fc.TotalAmount; 
+					break;
+				default:
+					break; 
+				}
+			}
+			else if(fc.ControlTarget == 2)
+			{
+				switch (fc.ControlType) {
+					case 1:
+						isOutofFreq =  fm.getAdgroupDayClickFreq(day, userId, adgroupId)>= fc.TotalAmount; 
+						break;
+					case 2:
+						isOutofFreq =  fm.getAdgroupWeekClickFreq(week, userId, adgroupId)>= fc.TotalAmount; 
+						break;
+					case 3:
+						isOutofFreq =  fm.getAdgroupMonthClickFreq(month, userId, adgroupId)>= fc.TotalAmount; 
+						break;
+					case 4:
+						isOutofFreq =  fm.getAdgroupTotalClickFreq(userId, adgroupId)>= fc.TotalAmount; 
+						break;
+					default:
+						break; 
+				}
+			}
+		}
+		return isOutofFreq; 
+	}
+	
+	/**
+	 * campaing 频控
+	 * @param day
+	 * @param week
+	 * @param month
+	 * @param fc
+	 * @param userId
+	 * @param campaingId
+	 * @return
+	 */
+	private boolean isOutOfCampaignFreq(int day, int week, int month, FrequencyControl fc,String userId,long campaingId) {
+		boolean isOutofFreq =false;
+		if(fc != null )
+		{
+			if(fc.ControlTarget == 1)
+			{
+				switch (fc.ControlType) {
+				case 1:
+					isOutofFreq =  fm.getCamDayFreq(day, userId, campaingId)>= fc.TotalAmount; 
+					break;
+				case 2:
+					isOutofFreq =  fm.getCamWeekFreq(week, userId, campaingId)>= fc.TotalAmount; 
+					break;
+				case 3:
+					isOutofFreq =  fm.getCamMonthFreq(month, userId, campaingId)>= fc.TotalAmount; 
+					break;
+				case 4:
+					isOutofFreq =  fm.getCamTotalFreq(userId, campaingId)>= fc.TotalAmount; 
+					break;
+				default:
+					break; 
+				}
+			}
+			else if(fc.ControlTarget == 2)
+			{
+				switch (fc.ControlType) {
+					case 1:
+						isOutofFreq =  fm.getCamDayClickFreq(day, userId, campaingId)>= fc.TotalAmount;
+						break;
+					case 2:
+						isOutofFreq = fm.getCamWeekClickFreq(week, userId, campaingId)>= fc.TotalAmount; 
+						break;
+					case 3:
+						isOutofFreq =  fm.getCamMonthClickFreq(month, userId, campaingId)>= fc.TotalAmount ;
+						break;
+					case 4:
+						isOutofFreq =  fm.getCamTotalClickFreq(userId, campaingId)>= fc.TotalAmount; 
+						break;
+					default:
+						break; 
+				}
+			}
+		}
+		return isOutofFreq; 
+	}
+
+	
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return "FrequencyControl";
+	}
+
+	
+
+}

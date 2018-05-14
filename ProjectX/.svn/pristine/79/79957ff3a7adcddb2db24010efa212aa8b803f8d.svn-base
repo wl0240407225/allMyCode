@@ -1,0 +1,65 @@
+package com.yaDsp.handler;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.alibaba.fastjson.JSON;
+import com.yaDsp.logger.*; 
+import com.yaDsp.engine.DspEngine;
+import com.yaDsp.model.standard.request.BidRequest;
+import com.yaDsp.model.standard.response.BidResponse;
+
+public class StdBid extends HttpServlet{
+
+	private static final long serialVersionUID = 1714145053734311523L;
+	
+	static DspEngine engine=new DspEngine();
+
+	protected void doPost(HttpServletRequest baseRequest,
+						  HttpServletResponse response) throws ServletException, IOException {
+
+		BufferedReader br = new BufferedReader(new InputStreamReader((ServletInputStream) baseRequest.getInputStream(), "utf-8"));
+		StringBuffer sb = new StringBuffer("");
+
+		String temp;
+		while ((temp = br.readLine()) != null) {
+			sb.append(temp);
+		}
+		br.close();
+		temp=sb.toString();
+
+
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd HH:mm:ss");
+		Object[] item = new Object[] { dateFormat.format(new Date()),// 0:时间
+				temp// 1:原始请求
+		};
+
+		LogSystem.writeLog("rawresponse", item);
+
+
+		BidRequest req = JSON
+				.parseObject(temp, BidRequest.class);
+
+		String agent=baseRequest.getHeader("User-Agent");
+		Boolean isdebug="debug".equals(agent)?true:false;
+		req.setDebug(isdebug);
+		//req.setSsp_id("1");
+		BidResponse resp=engine.doBid(req);
+
+		String str = JSON.toJSONString(resp);
+		response.setHeader("content-type", "application/json;charset=utf-8");
+		response.getWriter().write(str);
+	}
+
+}

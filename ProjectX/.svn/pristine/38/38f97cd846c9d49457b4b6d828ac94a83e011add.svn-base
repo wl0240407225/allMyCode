@@ -1,0 +1,31 @@
+package com.yaDsp.model.zplay.request;
+
+public class ZpBanner {
+    private int w;
+    private int h;
+    private ZpPos pos;
+
+    public int getW() {
+        return w;
+    }
+
+    public void setW(int w) {
+        this.w = w;
+    }
+
+    public int getH() {
+        return h;
+    }
+
+    public void setH(int h) {
+        this.h = h;
+    }
+
+    public ZpPos getPos() {
+        return pos;
+    }
+
+    public void setPos(ZpPos pos) {
+        this.pos = pos;
+    }
+}

@@ -1,0 +1,53 @@
+package com.yaDsp.strategy;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+ 
+
+public class ProgrammaticStrategyConfigProvider implements StrategyConfigProvider{
+	
+ 
+ 
+	private GroupStrategyConfig gsc;
+	
+	@Override
+	public List<GroupStrategyConfig> getGroupStrategyConfig() {
+		// TODO Auto-generated method stub
+		List<GroupStrategyConfig> config = new ArrayList<>();
+		gsc.setExecutionRate(50d);
+		gsc.setGroupName("group1");
+		gsc.setFilterStrategies(Arrays.asList(
+				"BlacklistControlStrategy", 
+				"BudgetControlStrategy", 
+				"ImpressionControlStrategy",
+				"ClickControlStrategy",
+				"FrequencyControlStrategy",
+				"SmoothlySpentStrategy",
+				"PriorityControlStrategy"));
+		gsc.setPrioprityStrategies(Arrays.asList("RandomStrategy"));
+		gsc.setFilterRules(Arrays.asList("sourcetype=app")); //app wap
+		
+		
+		GroupStrategyConfig gsc1 = new GroupStrategyConfig();
+ 
+		gsc1.setExecutionRate(50d);
+		gsc1.setGroupName("group2");
+		gsc1.setFilterStrategies(Arrays.asList(
+				"BlacklistControlStrategy", 
+				"BudgetControlStrategy", 
+				"ImpressionControlStrategy",
+				"ClickControlStrategy",
+				"FrequencyControlStrategy",
+				"SmoothlySpentStrategy",
+				"PriorityControlStrategy"));
+		gsc1.setPrioprityStrategies(Arrays.asList("RandomStrategy"));
+		gsc1.setFilterRules(Arrays.asList("sourcetype=app")); 
+		
+		config.add(gsc);
+		config.add(gsc1);
+		return config;
+	}	
+}
+

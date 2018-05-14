@@ -1,0 +1,353 @@
+package com.yaDsp.engine;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+
+import com.yaDsp.model.standard.request.*;
+import com.yaDsp.model.standard.response.*;
+import com.yaDsp.trc.TrcModel;
+import com.yaDsp.trc.TrcUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.alibaba.fastjson.JSON;
+
+import com.yaDsp.engine.selector.Selector;
+import com.yaDsp.logger.LogSystem;
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.material.model.AdContent;
+import com.yaDsp.strategy.StrategyManager;
+import com.yaDsp.util.IpUtil;
+
+public class DspEngine {
+	public BidResponse doBid(BidRequest request) {
+
+		Date start = new Date();
+		request = RequestAugmentation(request);
+		long t1 = System.nanoTime();
+		List<Ad> ads = Selector.Filter(request);
+		long t2 = System.nanoTime();
+		List<Ad> bids = StrategyManager.Execute(request, ads);
+
+		BidResponse resp = buildResp(bids, request);
+		long t3 = System.nanoTime();
+
+		writeLog(request, resp, start, t1, t2, t3);
+		return resp;
+
+	}
+
+	private void writeLog(BidRequest request, BidResponse resp, Date startTime, long t1, long t2, long t3) {
+
+		Device device = request.getDevice();
+		long selectorCost = t2 - t1;
+		long strategyCost = t3 - t2;
+		List<Bid> seatbids = resp.getBids();
+
+		int is_success = seatbids != null ? 1 : 0;// 竞价成功
+		String price = "";
+		// String bid_id = "";// 内部用广告token,唯一,UUID格式
+		String creative_id = "";// 素材id
+		String creative_unit_id = "";
+		String group_id = "";
+		String campaign_id = "";
+		String account_id = "";
+
+		String sex_tag = "";
+		String age_tag = "";
+
+		String chn = request.getApp().getCat();
+
+		int pricetype = 2;
+		String ad_price = "";
+
+		List<String> dealids = request.getPdb();
+		String dealidsStr = "";
+		if (dealids!=null && dealids.size() > 0) {
+			dealidsStr = StringUtils.join(dealids, ",");
+		}
+		if (is_success == 1) {
+			price = String.valueOf(resp.getBids().get(0).getPrice());
+			// bid_id = resp.getBidId();
+			creative_id = resp.getBids().get(0).getAdmId(); // 素材id
+			creative_unit_id = resp.getBids().get(0).getCreativeUnitId();
+			// pricetype=resp.getBids().get(0).getPriceType();
+			ad_price = String.valueOf(resp.getBids().get(0).getPrice());
+			group_id = String.valueOf(resp.getBids().get(0).getAdgroupId());
+			campaign_id = String.valueOf(resp.getBids().get(0).getCampaignId());
+			account_id = String.valueOf(resp.getBids().get(0).getAccountId());
+
+		}
+		
+		int w,h;
+		if(request.getImp().get(0).getBanner()!=null) {
+			w=request.getImp().get(0).getBanner().getW();
+			h=request.getImp().get(0).getBanner().getH();
+		}else {
+			w=h=0;
+		}
+
+		String nativeReq = JSON.toJSONString(request.getImp().get(0).getNativeRequest());
+
+		Object[] item = new Object[] {
+				new Date(),
+				request.getId(), // 0:request ID
+				request.getApp().getSspId(), // 1:sspid
+				request.getApp().getId(), // 2:appid
+				is_success, // 3:是否竞价成功
+				price, // 4:出价
+				resp.strategy_ext_name, // 5:策略组名称
+				selectorCost, // 6:定向花费时间
+				strategyCost, // 7:策略花费时间
+				device.getIp(), // 8:IP
+				request.getUser().getUserId(), // 9: imei
+				"user category", // 10: userid类型
+				startTime, // 11:开始日期
+				request.getDevice().getGeo().getProvince(), // 12 省
+				request.getDevice().getGeo().getCity(), // 13 市
+				chn, // 14 channel,分类
+				request.getApp().getId(), // 15. 三方广告位id
+				request.getId(), // DSP内部请求
+				request.getApp().getId(), // 三方的广告位token
+				creative_id, // 素材id
+				creative_unit_id, // 创意单元id
+				pricetype, // dsp价格类型
+				ad_price, // 广告组出价
+				group_id, campaign_id, account_id, 
+				w, // 宽
+				h, // 高
+				dealidsStr, // dealids
+				// trackUtil.getUidType(request.getDevice().getOs(),
+				// request.getApp().getSspId()),
+				sex_tag, age_tag,
+				nativeReq
+		};
+		LogSystem.writeLog("bid", item);
+	}
+
+	BidResponse buildResp(List<Ad> bids, BidRequest request) {
+		BidResponse resp = new BidResponse();
+		if (bids != null && bids.size() > 0 && bids.get(0).creative != null) {
+			try {
+
+				// String adToken =
+				// java.util.UUID.randomUUID().toString().replaceAll("-", "");//
+				// 内部使用广告token，唯一
+				//resp.setBidId(request.getId());// 用来跟踪和调试的id,内部关联靠此id
+				resp.setId(request.getId());// 返回id设置成请求id
+				Ad ad_bid = bids.get(0);
+				// seatbid.setSeatId(ad_bid.campaign.getSeat_id());// campaign上的seat_id
+				Bid bid = new Bid();
+				// bid.setId(request.getReqtoken());// 内部使用广告token，唯一
+				bid.setImpID(request.getImp().get(0).getId());// 请求的impression的id
+				bid.setPrice(ad_bid.strategy_ext_bid_price);// 出价
+				// bid.setAd_price(ad_bid.adgroup.getBid_price());
+				// bid.setPriceType(ad_bid.adgroup.getBid_type());// 出价类型
+				// bid.setAdid(String.valueOf(ad_bid.campaign.getAccount_id()));
+
+							TrcModel trcModel = new TrcModel();
+				trcModel.setAct("win");
+				trcModel.setId(request.getId());
+				trcModel.setCreativeId(String.valueOf(ad_bid.creativeId));
+				trcModel.setAdgroupId(String.valueOf(ad_bid.adgroupId));
+				trcModel.setCampaignId(String.valueOf(ad_bid.campiagnId));
+				trcModel.setDeviceId(request.getDevice().getImei());
+				trcModel.setSspId("");
+				trcModel.setAppId(request.getApp().getId());
+				trcModel.setSlottoken("");
+				trcModel.setBidPrice(String.valueOf(ad_bid.adgroup.getBid_price()));
+				trcModel.setIP(request.getDevice().getIp());
+				trcModel.setRealIP(request.getDevice().getIp());
+
+				bid.setNurl(TrcUtil.GetDefaultTrc(trcModel));
+
+				bid.setImgurl(ad_bid.creative.getImg_url());
+				// ad_content是一串json
+				// {"is_show_app_icon":"1","landing_page":"www.ad.siemens.com.cn","landing_page_type":"0","track_click_url":["http:clickc.admaster.com.cn"],"track_display_url":["http:v.admaster.com.cn","http:g.cn.miaozhen.com"],"type":"3","picurl_type":"0"}
+				AdContent ad_content = ad_bid.creativeUnit.getAdContent();
+				if (ad_content != null) {
+					bid.setLpg(ad_content.getLanding_page());
+
+					//List<String> orgin_clickurls = ad_content.getTrack_click_url();
+					List<String> orgin_clickurls = new ArrayList<String>();
+					trcModel.setAct("click");
+					orgin_clickurls.add(TrcUtil.GetDefaultTrc(trcModel));
+
+					bid.setClkTracking(orgin_clickurls);
+
+					//List<String> orgin_pvurls = ad_content.getTrack_display_url();
+					List<String> orgin_pvurls = new ArrayList<String>();
+					trcModel.setAct("imp");
+
+					orgin_pvurls.add(TrcUtil.GetDefaultTrc(trcModel));
+
+					bid.setImpTracking(orgin_pvurls);
+				}
+				bid.setAdmId(String.valueOf(ad_bid.creative.getCreative_id()));// 物料ID
+				bid.setCampaignId(String.valueOf(ad_bid.creative.getCampaign_id()));
+				bid.setAdgroupId(String.valueOf(ad_bid.creative.getAdgroup_id()));
+				bid.setCreativeUnitId(String.valueOf(ad_bid.creativeUnit.getCreative_unit_id()));
+				// 判断三方是否有创意id,优先使用三方创意id
+				// Hashtable<Integer, Hashtable<String, Integer>>
+				// third_creative_ids=ad_bid.creative.getThird_creative();
+				bid.setCreativeId(String.valueOf(ad_bid.creative.getCreative_id()));
+
+				List<Integer> attrList = new ArrayList<Integer>();
+				attrList.add((int) ad_bid.creative.getDisplaytype_id());
+
+				// bid.setTemplate_type(String.valueOf(ad_bid.creative.getTemplate_id()));//
+				// 模板类型
+				bid.setDealID(ad_bid.adgroup.getDeal_id());// deal id
+				// bid.setPlaytime(String.valueOf(ad_bid.adgroup
+				// .getMaterial_duration_play()));
+				if (ad_bid.account != null) {
+					bid.setAccountId(String.valueOf(ad_bid.account.getAccount_id()));// 广告主Id
+				}
+
+				// 信息流广告 旧结构
+//				if (ad_bid.creative.getDisplaytype_id() == 8) {
+//					String ad_contentJson = ad_bid.creativeUnit.getAdContentJson();
+//					NativeInfo flowinfo = JSON.parseObject(ad_contentJson, NativeInfo.class);
+//					bid.setNativeInfo(flowinfo);
+//				}
+
+				// 信息流广告 新结构
+				if (ad_bid.creative.getDisplaytype_id() == 8) {
+					String ad_contentJson = ad_bid.creativeUnit.getAdContentJson();
+					NativeInfo flowinfo = JSON.parseObject(ad_contentJson, NativeInfo.class);
+
+					AdmNative admNative = new AdmNative();
+
+					List<Object> assetsResp = new ArrayList<Object>();
+
+					ReqNative nativeRequest = request.getImp().get(0).getNativeRequest();
+
+					List<ReqNativeAsset> assets = nativeRequest.getAssets();
+
+					for(ReqNativeAsset asset : assets) {
+						if (!asset.isRequired()){
+							//如果不是必须项，则忽略
+							continue;
+						}
+
+						HashMap<String,HashMap<String,Integer>> assetOneof = asset.getAssetOneof();
+
+						if (assetOneof.containsKey("Title")) {
+							RespAssetTitle respAssetTitle = new RespAssetTitle();
+							respAssetTitle.setId(asset.getId());
+
+							RespNativeTitle respNativeTitle = new RespNativeTitle();
+
+							respNativeTitle.setText(flowinfo.getTitle());
+							respAssetTitle.setTitle(respNativeTitle);
+
+							assetsResp.add(respAssetTitle);
+						}
+						else if(assetOneof.containsKey("Img")) {
+							RespAssetImage respAssetImage = new RespAssetImage();
+							respAssetImage.setId(asset.getId());
+
+							RespNativeImage respNativeImage = new RespNativeImage();
+
+							respNativeImage.setUrl(ad_bid.creative.getImg_url());
+
+							respAssetImage.setImg(respNativeImage);
+
+							assetsResp.add(respAssetImage);
+						}else if(assetOneof.containsKey("Data")) {
+							HashMap<String,Integer> assetData = assetOneof.get("Data");
+
+							//判断是否是原生广告的描述字段
+							if (assetData.get("type") == 2) {
+								RespAssetData respAssetData = new RespAssetData();
+								respAssetData.setId(asset.getId());
+
+								RespNativeData respNativeData = new RespNativeData();
+
+								respNativeData.setLabel(flowinfo.getDesc());
+								respNativeData.setValue(flowinfo.getDesc());
+
+								respAssetData.setData(respNativeData);
+
+								assetsResp.add(respAssetData);
+							}
+						}
+					}
+
+					admNative.setAssets(assetsResp);
+
+					NativeLink nativeLink = new NativeLink();
+					nativeLink.setUrl(flowinfo.getLanding_page());
+
+					admNative.setLink(nativeLink);
+
+					bid.setAdmNative(admNative);
+				}
+
+				// 广告组推广方式
+				// AdObjective objective=ad_bid.adgroup.getAdObjective();
+				/*
+				 * //应用内单页推广 if(objective!=null &&
+				 * objective.getContent_type().equals("deeplink")) {
+				 * //{"landing_page":"https:\/\/tiaozhuan.com","landing_page_type":"0",
+				 * "track_click_url":"http:\/\/dianji.com","track_display_url":
+				 * "http:\/\/zhanshi.com","type":"2","app_link":"taobao.com","min_version":"3.3"
+				 * ,"no_installed_type":"jump","is_adgroup_url":"0"} String ad_contentJson =
+				 * ad_bid.creativeUnit.getAdContentJson(); DeepLink
+				 * deeplink=JSON.parseObject(ad_contentJson, DeepLink.class);
+				 * bid.setDeep_link(deeplink); }
+				 */
+				// text-info:横幅的文字创意
+				/*
+				 * if(ad_bid.creative.getDisplaytype_id()==0 &&
+				 * ad_bid.creativeUnit.getCreative_type()==1) { String ad_contentJson =
+				 * ad_bid.creativeUnit.getAdContentJson(); TextInfo
+				 * text_info=JSON.parseObject(ad_contentJson, TextInfo.class);
+				 * bid.setText_info(text_info); }
+				 */
+
+				List<Bid> bidList = new ArrayList<Bid>();
+				bidList.add(bid);
+
+				resp.setBids(bidList);
+				resp.strategy_ext_name = ad_bid.strategy_ext_name;
+			} catch (Exception ex) {
+				logger.error("buildResp出错：", ex);
+			}
+		}
+		return resp;
+	}
+
+	public static BidRequest RequestAugmentation(BidRequest req) {
+		// 填充地域 req.ext.province city
+		if (req.getDevice() != null) {
+			String[] areaInfo = IpUtil.getAreaInfo(req.getDevice().getIp());
+			req.getDevice().setGeo(new Geo());
+			req.getDevice().getGeo().setProvince(areaInfo[0]);
+			req.getDevice().getGeo().setCity(areaInfo[1]);
+			
+			String uid="";
+			if(req.getDevice().getIfa()!=null) {
+				uid=req.getDevice().getIfa();			
+			}
+			
+			if(req.getDevice().getImei()!=null) {
+				uid=req.getDevice().getImei();
+			}
+			
+			if(req.getUser()==null)
+				req.setUser(new User());
+			
+			req.getUser().setUserId(uid);
+		}
+		
+		 
+		return req;
+	}
+
+	private static Logger logger = LoggerFactory.getLogger(DspEngine.class);
+
+}

@@ -1,0 +1,33 @@
+package com.yaDsp.model.standard.request;
+
+import java.util.HashMap;
+
+public class ReqNativeAsset {
+    private int id;
+    private boolean required;
+    private HashMap<String,HashMap<String,Integer>> AssetOneof;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public boolean isRequired() {
+        return required;
+    }
+
+    public void setRequired(boolean required) {
+        this.required = required;
+    }
+
+    public HashMap<String,HashMap<String,Integer>> getAssetOneof() {
+        return AssetOneof;
+    }
+
+    public void setAssetOneof(HashMap<String,HashMap<String,Integer>> assetOneof) {
+        AssetOneof = assetOneof;
+    }
+}

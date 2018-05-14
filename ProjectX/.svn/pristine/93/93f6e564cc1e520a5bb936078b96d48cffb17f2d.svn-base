@@ -1,0 +1,87 @@
+package com.yaDsp.strategy.impl;
+ 
+import java.util.ArrayList;
+import java.util.List;
+ 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yaDsp.material.model.Ad;
+import com.yaDsp.material.model.BudgetControl;
+import com.yaDsp.model.standard.request.BidRequest;
+import com.yaDsp.strategy.FilterStrategy;
+import com.yaDsp.util.DateFormatterUtil;
+ 
+
+public class BudgetControlStrategy  implements FilterStrategy {
+	 
+	BudgetManager bm=new BudgetManager();
+	
+	private static Logger logger = LoggerFactory.getLogger(BudgetControlStrategy.class);
+	
+	
+	@Override
+	public List<Ad> execute(BidRequest request, List<Ad> ads) {
+		List<Ad> result = new ArrayList<Ad>();
+		try{
+		if(ads != null && ads.size() > 0)
+		{
+			for (Ad ad : ads) 
+			{
+				boolean isOutofBudget = false;
+				int day = DateFormatterUtil.getDate(); 
+				if(ad.adgroup.getDaily_budget() != null){
+					BudgetControl bc = ad.adgroup.getDaily_budget(); 
+					if(bc.ControlType == 1){ 
+						long spent = bm.getAdgroupDaySpent(day, ad.adgroupId);
+						isOutofBudget = spent == -1  ||  spent >= bc.DialyBudget;
+					}else if(bc.ControlType == 2){ 
+						long spent = bm.getAdgroupTotalSpent(ad.adgroupId);
+						isOutofBudget = spent == -1 || spent >= bc.TotalBudget;
+					}else if(bc.ControlType == 3){
+						long spent = bm.getAdgroupDaySpent(day, ad.adgroupId);
+						long spent2 = bm.getAdgroupTotalSpent(ad.adgroupId);
+						isOutofBudget = (spent == -1 || spent >= bc.DialyBudget) ||
+										 (spent2 == -1 || spent2 >= bc.TotalBudget);
+					}
+					if(isOutofBudget) 
+						continue;
+				}
+				
+				if(ad.campaign.getDaily_budget_de() != null){
+					BudgetControl bc = ad.campaign.getDaily_budget_de();
+					if (bc.ControlType == 1) {  
+						long spent  = bm.getCampaignDaySpent(day, ad.campiagnId);
+						isOutofBudget = spent == -1 || spent >= bc.DialyBudget;
+					}else if(bc.ControlType == 2){ 
+						long spent = bm.getCampaignTotalSpent(ad.campiagnId); 
+						isOutofBudget = spent == -1 || spent >= bc.TotalBudget;
+					}else if(bc.ControlType == 3){
+						long spent = bm.getCampaignDaySpent(day, ad.campiagnId);
+						long spent2 = bm.getCampaignTotalSpent(ad.campiagnId);
+						isOutofBudget = spent == -1 || spent >= bc.DialyBudget ||
+								        spent2 == -1 || spent2 >= bc.TotalBudget;
+					}
+					if(isOutofBudget) 
+						continue;
+				}
+				result.add(ad);
+			}	
+		}
+		return result;
+		}
+		catch(Exception x)
+		{
+			logger.debug("BudgetControlError"+x.getMessage());
+			return result;
+		}
+	}
+
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return "BudgetControl";
+	}
+}
+

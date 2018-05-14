@@ -1,0 +1,33 @@
+package com.yaDsp.model.standard.response;
+
+import java.util.List;
+
+public class NativeLink {
+    private String url;
+    private List<String> clicktrackers;
+    private NativeLinkExt ext;
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public List<String> getClicktrackers() {
+        return clicktrackers;
+    }
+
+    public void setClicktrackers(List<String> clicktrackers) {
+        this.clicktrackers = clicktrackers;
+    }
+
+    public NativeLinkExt getExt() {
+        return ext;
+    }
+
+    public void setExt(NativeLinkExt ext) {
+        this.ext = ext;
+    }
+}

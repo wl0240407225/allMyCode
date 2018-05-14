@@ -1,0 +1,19 @@
+package com.yaDsp.material.model;
+
+public class AdObjectiveAndroid {
+	private String package_url;
+	private String package_name;
+	
+	public String getPackage_url() {
+		return package_url;
+	}
+	public void setPackage_url(String package_url) {
+		this.package_url = package_url;
+	}
+	public String getPackage_name() {
+		return package_name;
+	}
+	public void setPackage_name(String package_name) {
+		this.package_name = package_name;
+	}
+}

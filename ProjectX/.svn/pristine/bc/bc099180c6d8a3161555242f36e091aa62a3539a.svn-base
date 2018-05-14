@@ -1,0 +1,787 @@
+package com.yaDsp.util;
+
+ 
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+ 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+ 
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+
+import com.alibaba.fastjson.JSON;
+import redis.clients.jedis.JedisPoolConfig;
+
+
+public class RedisUtil {
+
+	private static Logger logger = LoggerFactory.getLogger(RedisUtil.class);
+
+	private JedisPoolConfig jedisPoolConfig;
+ 
+	private JedisPool jedisReaderPool;
+
+ 
+	private JedisPool jedisWritePool;
+	
+ 
+	private JedisPool jedisTagsPool;
+	
+ 
+	private JedisPool jedisPoolPackageReaderPool;
+
+	public RedisUtil(){
+
+		String readHost = ConfigManager.Get("redis.readHost");
+		String writeHost = ConfigManager.Get("redis.writeHost");
+		int port = Integer.valueOf(ConfigManager.Get("redis.port"));
+		int database = Integer.valueOf(ConfigManager.Get("redis.database"));
+		int databasePackage = Integer.valueOf(ConfigManager.Get("redis.databasePackage"));
+		int timeout = Integer.valueOf(ConfigManager.Get("redis.timeout"));
+		int maxIdle = Integer.valueOf(ConfigManager.Get("redis.maxIdle"));
+		int minIdle = Integer.valueOf(ConfigManager.Get("redis.minIdle"));
+		int maxTotal = Integer.valueOf(ConfigManager.Get("redis.maxTotal"));
+		int maxWaitMillis = Integer.valueOf(ConfigManager.Get("redis.maxWaitMillis"));
+
+
+		jedisPoolConfig = new JedisPoolConfig();
+		jedisPoolConfig.setMaxIdle(maxIdle);
+		jedisPoolConfig.setMinIdle(minIdle);
+		jedisPoolConfig.setMaxTotal(maxTotal);
+		jedisPoolConfig.setMaxWaitMillis(maxWaitMillis);
+
+		jedisReaderPool = new JedisPool(jedisPoolConfig,readHost,port,timeout,null,database);
+
+		jedisPoolPackageReaderPool= new JedisPool(jedisPoolConfig,writeHost,port,timeout,null,databasePackage);
+
+		jedisWritePool = new JedisPool(jedisPoolConfig,writeHost,port,timeout,null,database);
+	}
+
+	/**
+	 * 
+	 * @Description 获取Jedis对象 redis提供了丰富的api，均可以使用该对象来操作redis
+	 * @return Jedis对象
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午2:26:36
+	 */
+	public Jedis getWriteInstance() {
+		return jedisWritePool.getResource();
+	}
+	
+	/**
+	 * 
+	 * @Description 获取Jedis对象 redis提供了丰富的api，均可以使用该对象来操作redis
+	 * @return Jedis对象
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午2:26:36
+	 */
+	public Jedis getReadInstance() {
+		return jedisReaderPool.getResource();
+	}
+	
+	public Jedis getReadPackageInstance() {
+		return jedisPoolPackageReaderPool.getResource();
+	}
+	/**
+	 * 
+	 * @Description 获取Jedis对象 redis提供了丰富的api，均可以使用该对象来操作redis
+	 * @return
+	 *
+	 * @author wjggwm
+	 * @data 2016年11月30日 下午2:00:04
+	 */
+	public Jedis getTagsInstance() {
+		return jedisTagsPool.getResource();
+	}
+
+
+
+	/**
+	 * 
+	 * @Description 从redis获取String类型数据
+	 * @param key
+	 *            redis中的key
+	 * @return Sting 从redis中获取的值,如果key对象的值为非String类型,redis将返回error
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月5日 上午11:16:59
+	 */
+	public String getString(String key) {
+		Jedis jedis = null;
+		try {
+			jedis = getReadInstance();
+			String value = jedis.get(key);
+			return value;
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+	
+	
+	
+	/**
+	 * 判断key中是否存在设备号
+	 * 
+	 * @param key
+	 * @return
+	 */
+	public boolean exist(String str,String userId) {
+		Jedis jedis = null;
+		boolean result=true;
+		try {
+			jedis = getReadPackageInstance();
+			result=jedis.sismember(str, userId);
+			
+			
+		} catch (Exception e) { 
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return result;
+	}
+	/**
+	 * 从redis获取String类型数据,如果取得的string=null或者“”，返回 0.
+	 * 
+	 * @param key
+	 * @return
+	 */
+	public int getIntByKey(String key) {
+		Jedis jedis = null;
+		try {
+			jedis = getReadInstance();
+			String value = jedis.get(key);
+			if (value != null && !value.equals("")) { 
+				return Integer.parseInt(value);
+			}
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+			return -1;
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return 0;
+	}
+
+	/**
+	 * 从redis获取String类型数据,如果取得的string=null或者“”，返回 0.
+	 * 
+	 * @param key
+	 * @return
+	 */
+	public long getLongByKey(String key) {
+		Jedis jedis = null;
+		try {
+			jedis = getReadInstance();
+			String value = jedis.get(key);
+			if (value != null && !value.equals("")) { 
+				return Long.parseLong(value);
+			}
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+			return -1;
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return 0;
+	}
+
+	
+
+	/**
+	 * 
+	 * @Description 存储数据到redis,数据格式:String类型
+	 * @param key
+	 *            存储的key
+	 * @param value
+	 *            待存储的value
+	 * @return Long 1:存储成功;2:存储失败
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月5日 上午11:20:21
+	 */
+	public synchronized Long setnxValue(String key, String value) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			Long result = jedis.setnx(key, value);
+			return result;
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @Description
+	 * @param key
+	 *            key 存储的key
+	 * @param seconds
+	 *            存储的时间,到期后redis服务器会自动删除该key和value
+	 * @param value
+	 *            待存储的value
+	 * @return boolean true:存储成功;false:存储失败
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月5日 上午11:21:02
+	 */
+	public synchronized boolean setexValue(String key, int seconds, String value) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			String result = jedis.setex(key, seconds, value);
+			return "OK".equals(result) ? Boolean.TRUE : Boolean.FALSE;
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return false;
+
+	}
+
+	
+
+	/**
+	 * 
+	 * @Description 设置多个key-value值
+	 * @param keysvalues
+	 *            Map中的key和value，必须一一对应，参数格式（key1,value1,key2,value2,...,keyn,
+	 *            valuen）
+	 * @return boolean true:存储成功;false:存储失败
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午1:03:21
+	 */
+	public boolean mset(String... keysvalues) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			String result = jedis.mset(keysvalues);
+			return "OK".equals(result) ? Boolean.TRUE : Boolean.FALSE;
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 
+	 * @Description 获取Map中多个key所对应的value值
+	 * @param keys
+	 *            Map中的key，参数格式（key1,key2,key3,...,keyn）
+	 * @return 返回的是个value集合list，顺序与key对应
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午1:04:25
+	 */
+	public List<String> mget(String... keys) {
+		Jedis jedis = null;
+		try {
+			jedis = getReadInstance();
+			List<String> result = jedis.mget(keys);
+			return result;
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @Description 存储map类型数据
+	 * @param key
+	 *            存储的key
+	 * @param map
+	 *            待存储的map对象
+	 * @return boolean true:存储成功;false:存储失败
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午1:12:10
+	 */
+	public boolean hmSetMap(String key, Map<String, String> map) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			String result = jedis.hmset(key, map);
+			return "OK".equals(result) ? Boolean.TRUE : Boolean.FALSE;
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 
+	 * @Description 获取map中的所有键的个数
+	 * @param key
+	 *            redis存储map对象对应的key
+	 * @return 返回map中key的个数
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午1:33:09
+	 */
+	public Long getMapKeyLength(String key) {
+		Jedis jedis = null;
+		try {
+			jedis = getReadInstance();
+			return jedis.hlen(key);
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @Description 获取map中的所有键值
+	 * @param key
+	 *            redis存储map对象对应的key
+	 * @return Set<String> map中所有的键值集合
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午1:36:35
+	 */
+	public Set<String> getMapKeys(String key) {
+		Jedis jedis = null;
+		try {
+			jedis = getReadInstance();
+			return jedis.hkeys(key);
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @Description 获取map中的所有value值
+	 * @param key
+	 *            redis存储map对象对应的key
+	 * @return List<String> map中所有的value值集合
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午1:41:34
+	 */
+	public List<String> getMapValues(String key) {
+		Jedis jedis = null;
+		try {
+			jedis = getReadInstance();
+			return jedis.hvals(key);
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @Description 删除map中的键值
+	 * @param key
+	 *            redis存储map对象对应的key
+	 * @param keys
+	 *            Map中的key，参数格式（key1,key2,key3,...,keyn）
+	 * @return
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午1:47:12
+	 */
+	public boolean deleteMapKey(String key, String... keys) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			Long result = jedis.hdel(key, keys);
+			return 1 == result ? Boolean.TRUE : Boolean.FALSE;
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 
+	 * @Description 获取map键对应的值
+	 * @param key
+	 *            存储的key
+	 * @param fields
+	 *            <font color=red>map的键，注意可变</font>
+	 * @return fileds对应的集合list
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午1:13:31
+	 */
+	public List<String> getMap(String key, String... fields) {
+		Jedis jedis = null;
+		try {
+			jedis = getReadInstance();
+			return jedis.hmget(key, fields);
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @Description 存储map类型数据 1、将map序列化为json字符串进行存储，等同与存储String类型
+	 *              2、不能使用redis存储map对象的一些接口,如获取key，获取value等
+	 * @param key
+	 *            存储的key
+	 * @param map
+	 *            待存储的map对象
+	 * @return boolean true:存储成功;false:存储失败
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午1:26:49
+	 */
+	public boolean setMap(String key, Map<Object, Object> map) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			String result = jedis.set(key, JSON.toJSONString(map));
+			return "OK".equals(result) ? Boolean.TRUE : Boolean.FALSE;
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 
+	 * @Description 获取map
+	 * @param key
+	 *            存储的key
+	 * @return Map redis中key对应的map对象
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午1:28:05
+	 */
+	@SuppressWarnings("unchecked")
+	public Map<Object, Object> getMap(String key) {
+		Jedis jedis = null;
+		try {
+			jedis = getReadInstance();
+			String result = jedis.get(key);
+			return JSON.parseObject(result, Map.class);
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @Description 原有值得基础上添加,如若之前没有该key,则导入该key,若之前已经设定了该可以，则value会被append
+	 * @param key
+	 *            待追加的key
+	 * @param value
+	 *            待追加的value
+	 * @return boolean true:存储成功;false:存储失败
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午1:55:10
+	 */
+	public boolean appendValue(String key, String value) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			Long result = jedis.append(key, value);
+			return result > 0 ? Boolean.TRUE : Boolean.FALSE;
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 
+	 * @Description 在名称为key的list头添加一个值为value的元素
+	 * @param key
+	 *            存储的key
+	 * @param list
+	 *            存储的list对象
+	 * @return redis中key对应的list在push之后元素的个数(the number of elements inside the
+	 *         list after the push operation)
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午2:08:17
+	 */
+	public Long listLPush(String key, List<String> list) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			return jedis.lpush(key, (String[]) list.toArray());
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @Description 在名称为key的list尾添加一个值为value的元素
+	 * @param key
+	 *            存储的key
+	 * @param list
+	 *            存储的list对象
+	 * @return redis中key对应的list在push之后元素的个数(the number of elements inside the
+	 *         list after the push operation)
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午2:08:17
+	 */
+	public Long listRPush(String key, List<String> list) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			return jedis.lpush(key, (String[]) list.toArray());
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @Description 返回并删除名称为key的list中的首元素
+	 * @param key
+	 * @return
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午2:30:20
+	 */
+	public String listLPop(String key) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			return jedis.lpop(key);
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @Description 返回并删除名称为key的list中的尾元素
+	 * @param key
+	 * @return
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午2:30:20
+	 */
+	public String listRPop(String key) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			return jedis.rpop(key);
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @Description 删除
+	 * @param key
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午2:13:33
+	 */
+	public boolean delete(String key) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			Long result = jedis.del(key);
+			return result > 0 ? Boolean.TRUE : Boolean.FALSE;
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 
+	 * @Description 名称为key的string增1操作
+	 * @param key
+	 * @return long key对应的值增1后的value
+	 *
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午2:34:44
+	 */
+	public Long incr(String key) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			return jedis.incr(key);
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @Description 名称为key的string减1操作
+	 * @param key
+	 * @return long key对应的值减1后的value
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午2:34:44
+	 */
+	public Long decr(String key) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			return jedis.decr(key);
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @Description 名称为key的string增加increment
+	 * @param key
+	 * @return long key对应的值增increment后的value
+	 * 
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午2:34:44
+	 */
+	public Long incrBy(String key, long increment) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			return jedis.incrBy(key, increment);
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @Description 名称为key的string减1操作
+	 * @param key
+	 * @return long key对应的值减increment后的value
+	 * @author wjggwm
+	 * @data 2016年8月20日 上午2:34:44
+	 */
+	public void decrBy(String key, long increment) {
+		Jedis jedis = null;
+		try {
+			jedis = getWriteInstance();
+			jedis.decrBy(key, increment);
+		} catch (Exception e) {
+			logger.error("redis操作异常:{}", e);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+	}
+
+}
